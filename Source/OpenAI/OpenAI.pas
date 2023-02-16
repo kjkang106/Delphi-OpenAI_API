@@ -53,9 +53,12 @@ type
     procedure OnResult(Sender: TObject);
     procedure ShowProcessDlg(Msg: string);
     procedure HideProcessDlg;
+
   public
     constructor Create; virtual;
     destructor Destroy; override;
+
+    function ParseErrMsg(RecvObj: TJSONObject; out OutStr: string): Boolean;
 
     function SendJson(AUrl: string; SendObj: TJSONObject): string;
     function SendFormData(AUrl: string; zFormData: TStringArray): string;
@@ -69,7 +72,7 @@ type
 
 implementation
 
-uses InetUtil, OpenAIHeader, ProgressDlg;
+uses InetUtil, OpenAIHeader, ProgressDlg, JSonUtil;
 
 { TOpenAI }
 
@@ -97,6 +100,20 @@ end;
 procedure TOpenAI.OnResult(Sender: TObject);
 begin
   FOutStr:= TOpenAIThread(Sender).OutStr;
+end;
+
+function TOpenAI.ParseErrMsg(RecvObj: TJSONObject; out OutStr: string): Boolean;
+var
+  jDoc: TJSONObject;
+begin
+  Result:= False;
+  jDoc:= GetJsonObj(RecvObj, 'error');
+  if jDoc <> nil then
+  begin
+    Result:= True;
+    OutStr:= GetJsonStr(jDoc, 'message');
+    //OutStr:= GetJsonStr(jDoc, 'type');
+  end;
 end;
 
 function TOpenAI.SendFormData(AUrl: string; zFormData: TStringArray): string;
@@ -138,7 +155,7 @@ begin
   AParams:= SendObj.ToString;
 
   SetLength(CustomHeader, 2);
-  CustomHeader[0]:= 'Content-Type: application/json';
+  CustomHeader[0]:= 'Content-Type: application/json; charset=utf-8';
   CustomHeader[1]:= 'Authorization: Bearer ' + api_key;
 
   FOutStr:= '';

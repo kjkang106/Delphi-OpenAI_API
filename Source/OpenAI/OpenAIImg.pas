@@ -28,7 +28,6 @@ type
     function MakeSendDocCreateImageVariation(ImgFileName: string;
       var zFormData: TStringArray; out OutStr: string): Boolean;
 
-    function  ParseErrMsg (RecvObj: TJSONObject; out OutStr: string): Boolean;
     procedure ParseImgList(RecvObj: TJSONObject);
 
     function  GetValidPromopt(var APrompt: string; out OutStr: string): Boolean;
@@ -361,7 +360,7 @@ var
 begin
   Result:= False;
   OutStr:='';
-  APrompt:= StringReplace(Trim(APrompt), sLineBreak, ' ', [rfReplaceAll]);
+  APrompt:= Trim(APrompt);
 
   if APrompt = '' then
   begin
@@ -376,6 +375,7 @@ begin
     Exit;
   end;
 
+  APrompt:= SimpleEscapeJsonParamStr(APrompt);
   Result:= True;
 end;
 
@@ -395,21 +395,6 @@ end;
 procedure TOpenAIImg.Init_List;
 begin
   FzImgList.Clear;
-end;
-
-function TOpenAIImg.ParseErrMsg(RecvObj: TJSONObject;
-  out OutStr: string): Boolean;
-var
-  jDoc: TJSONObject;
-begin
-  Result:= False;
-  jDoc:= GetJsonObj(RecvObj, 'error');
-  if jDoc <> nil then
-  begin
-    Result:= True;
-    OutStr:= GetJsonStr(jDoc, 'message');
-    //OutStr:= GetJsonStr(jDoc, 'type');
-  end;
 end;
 
 procedure TOpenAIImg.ParseImgList(RecvObj: TJSONObject);

@@ -3,12 +3,23 @@ unit OpenAIHeader;
 interface
 
 const
-  OPEN_AI_URL       = 'https://api.openai.com';
-  IMG_CREATE_URL    = 'v1/images/generations';
-  IMG_EDIT_URL      = 'v1/images/edits';
-  IMG_VARIATION_URL = 'v1/images/variations';
-  MAX_IMG_DESC      = 1000;
-  MAX_IMG_SIZE      = 4194304;   //4MB = 4 * 1024 * 1024
+  OPEN_AI_URL        = 'https://api.openai.com';
+  IMG_CREATE_URL     = 'v1/images/generations';
+  IMG_EDIT_URL       = 'v1/images/edits';
+  IMG_VARIATION_URL  = 'v1/images/variations';
+  COMPLETION_URL     = 'v1/completions';
+
+  MAX_IMG_DESC       = 1000;
+  MAX_IMG_SIZE       = 4194304;   //4MB = 4 * 1024 * 1024
+
+  LASTEST_MODEL_Davinci = 'text-davinci-003';       //Complex intent, cause and effect, summarization for audience
+  LASTEST_MODEL_Curie   = 'text-curie-001';         //Language translation, complex classification, text sentiment, summarization
+  LASTEST_MODEL_Babbage = 'text-babbage-001';       //Moderate classification, semantic search classification
+  LASTEST_MODEL_Ada     = 'text-ada-001';           //Parsing text, simple classification, address correction, keywords
+  LASTEST_MODEL_GPT3    = LASTEST_MODEL_Davinci;
+
+  LASTEST_MODEL_Codex   = 'code-davinci-002';       //public code from GitHub
+  LASTEST_MODEL_Filter  = 'content-filter-alpha';
 
 type
   TAiImgSize   = (ais256, ais512, ais1024);

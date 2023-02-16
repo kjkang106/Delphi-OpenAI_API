@@ -34,7 +34,7 @@ object FOpenAITest: TFOpenAITest
     Top = 304
     Width = 512
     Height = 247
-    TabOrder = 0
+    TabOrder = 12
   end
   object BtCreateImage: TButton
     Left = 194
@@ -42,7 +42,7 @@ object FOpenAITest: TFOpenAITest
     Width = 96
     Height = 25
     Caption = 'CreateImage'
-    TabOrder = 1
+    TabOrder = 3
     OnClick = BtCreateImageClick
   end
   object CbImgList: TComboBox
@@ -51,7 +51,7 @@ object FOpenAITest: TFOpenAITest
     Width = 145
     Height = 21
     Style = csDropDownList
-    TabOrder = 2
+    TabOrder = 4
     OnChange = CbImgListChange
   end
   object BtLoadImage: TButton
@@ -60,7 +60,7 @@ object FOpenAITest: TFOpenAITest
     Width = 75
     Height = 25
     Caption = 'LoadImage'
-    TabOrder = 3
+    TabOrder = 5
     OnClick = BtLoadImageClick
   end
   object CbImgSize: TComboBox
@@ -70,7 +70,7 @@ object FOpenAITest: TFOpenAITest
     Height = 21
     Style = csDropDownList
     ItemIndex = 0
-    TabOrder = 4
+    TabOrder = 1
     Text = '256'
     Items.Strings = (
       '256'
@@ -84,7 +84,7 @@ object FOpenAITest: TFOpenAITest
     Height = 22
     MaxValue = 10
     MinValue = 1
-    TabOrder = 5
+    TabOrder = 0
     Value = 1
   end
   object CbImgRetFmt: TComboBox
@@ -94,7 +94,7 @@ object FOpenAITest: TFOpenAITest
     Height = 21
     Style = csDropDownList
     ItemIndex = 0
-    TabOrder = 6
+    TabOrder = 2
     Text = 'URL'
     Items.Strings = (
       'URL'
@@ -107,15 +107,15 @@ object FOpenAITest: TFOpenAITest
     Height = 162
     Lines.Strings = (
       'A cute baby sea otter')
-    TabOrder = 7
+    TabOrder = 11
   end
   object BtImageEdit: TButton
-    Left = 687
+    Left = 679
     Top = 8
     Width = 96
     Height = 25
     Caption = 'ImageEdit'
-    TabOrder = 8
+    TabOrder = 7
     OnClick = BtImageEditClick
   end
   object BtImageVariation: TButton
@@ -124,17 +124,36 @@ object FOpenAITest: TFOpenAITest
     Width = 96
     Height = 25
     Caption = 'ImageVariation'
-    TabOrder = 9
+    TabOrder = 8
     OnClick = BtImageVariationClick
   end
   object BtLoadMask: TButton
-    Left = 607
+    Left = 601
     Top = 8
     Width = 75
     Height = 25
     Caption = 'LoadMask'
-    TabOrder = 10
+    TabOrder = 6
     OnClick = BtLoadMaskClick
+  end
+  object BtCompletion: TButton
+    Left = 940
+    Top = 8
+    Width = 96
+    Height = 25
+    Caption = 'Completion'
+    TabOrder = 10
+    OnClick = BtCompletionClick
+  end
+  object EtMaxToken: TSpinEdit
+    Left = 878
+    Top = 10
+    Width = 59
+    Height = 22
+    MaxValue = 2048
+    MinValue = 1
+    TabOrder = 9
+    Value = 60
   end
   object TaskDialog1: TTaskDialog
     Buttons = <>

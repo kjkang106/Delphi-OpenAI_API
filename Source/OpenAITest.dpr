@@ -12,7 +12,8 @@ uses
   OpenAIHeader in 'OpenAI\OpenAIHeader.pas',
   OpenAIImg in 'OpenAI\OpenAIImg.pas',
   ProgressDlg in 'OpenAI\ProgressDlg.pas' {FProgressDlg},
-  ToneDown in 'Utils\ToneDown.pas' {FToneDown};
+  ToneDown in 'Utils\ToneDown.pas' {FToneDown},
+  OpenAIComp in 'OpenAI\OpenAIComp.pas';
 
 {$R *.res}
 

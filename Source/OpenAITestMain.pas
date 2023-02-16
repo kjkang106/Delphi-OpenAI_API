@@ -1,4 +1,4 @@
-unit OpenAITestMain;
+﻿unit OpenAITestMain;
 
 interface
 
@@ -22,6 +22,8 @@ type
     BtLoadMask: TButton;
     ImgMask: TImage;
     TaskDialog1: TTaskDialog;
+    BtCompletion: TButton;
+    EtMaxToken: TSpinEdit;
     procedure BtCreateImageClick(Sender: TObject);
     procedure CbImgListChange(Sender: TObject);
     procedure BtLoadImageClick(Sender: TObject);
@@ -30,6 +32,7 @@ type
     procedure FormActivate(Sender: TObject);
     procedure BtImageVariationClick(Sender: TObject);
     procedure BtLoadMaskClick(Sender: TObject);
+    procedure BtCompletionClick(Sender: TObject);
   private
     { Private declarations }
     RootPath, ImgPath: string;
@@ -46,7 +49,8 @@ var
 
 implementation
 
-uses InetUtil, OpenAI, OpenAIImg, OpenAIHeader, WICImgUtil, ProgressDlg;
+uses InetUtil, OpenAI, OpenAIImg, OpenAIHeader, WICImgUtil, ProgressDlg,
+  OpenAIComp;
 
 {$R *.dfm}
 
@@ -156,6 +160,37 @@ begin
   begin
     LoadImage(ImgFileName, ImgMask);
   end;
+end;
+
+procedure TFOpenAITest.BtCompletionClick(Sender: TObject);
+var
+  OpenAIComp: TOpenAIComp;
+  Response: string;
+  ai, aMax: Integer;
+begin
+  WriteLog('Completion');
+
+  OpenAIComp:= TOpenAIComp.Create;
+  try
+    OpenAIComp.api_key          := LoadApiKey;
+    OpenAIComp.Prompt           := MemoPrompt.Text;
+    OpenAIComp.Max_tokens       := EtMaxToken.Value;
+    OpenAIComp.Temperature      := 0;
+    OpenAIComp.Top_p            := 1.0;
+    OpenAIComp.Frequency_penalty:= 0.0;
+    OpenAIComp.Presence_penalty := 0.0;
+    //OpenAIComp.StopStr          := sLineBreak;
+    Response:= OpenAIComp.CreateCompletions(LASTEST_MODEL_GPT3);
+
+    aMax:= Length(OpenAIComp.zChoices);
+    for ai:= 0  to aMax - 1 do
+      WriteLog(OpenAIComp.zChoices[ai]);
+  finally
+    OpenAIComp.Free;
+    OpenAIComp:= nil;
+  end;
+
+  WriteLog(Response);
 end;
 
 procedure TFOpenAITest.BtCreateImageClick(Sender: TObject);
