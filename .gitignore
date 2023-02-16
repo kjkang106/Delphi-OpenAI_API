@@ -1,0 +1,8 @@
+EXE/Init.ini
+EXE/Image
+Source/Debug
+Source/__history
+Source/OpenAI/__history
+Source/Utils/__history
+*.local
+*.identcache
