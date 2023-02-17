@@ -44,8 +44,9 @@ type
 
   TOpenAI = class
   private
-    Forganization : string;
     Fapi_key      : string;
+    Forganization : string;
+    Fuser_IDs     : string;
     FOnProgShow   : TProgShowEvent;
     FOnProgHide   : TNotifyEvent;
     FOutStr       : string;
@@ -63,8 +64,9 @@ type
     function SendJson(AUrl: string; SendObj: TJSONObject): string;
     function SendFormData(AUrl: string; zFormData: TStringArray): string;
   published
-    property organization: string          read Forganization write Forganization;
     property api_key     : string          read Fapi_key      write Fapi_key;
+    property organization: string          read Forganization write Forganization;
+    property user_IDs    : string          read Fuser_IDs     write Fuser_IDs;
 
     property OnProgShow  : TProgShowEvent  read FOnProgShow   write FOnProgShow;
     property OnProgHide  : TNotifyEvent    read FOnProgHide   write FOnProgHide;
@@ -78,6 +80,9 @@ uses InetUtil, OpenAIHeader, ProgressDlg, JSonUtil;
 
 constructor TOpenAI.Create;
 begin
+  Fapi_key      := '';
+  Forganization := '';
+  Fuser_IDs     := '';
   FOnProgShow   := nil;
   FOnProgHide   := nil;
 end;
@@ -123,6 +128,11 @@ var
 begin
   SetLength(CustomHeader, 1);
   CustomHeader[0]:= 'Authorization: Bearer ' + api_key;
+  if organization <> '' then
+  begin
+    SetLength(CustomHeader, 2);
+    CustomHeader[1]:= 'OpenAI-Organization: ' + organization;
+  end;
 
   FOutStr:= '';
   ShowProcessDlg('Http Post FormData ...');
@@ -157,6 +167,11 @@ begin
   SetLength(CustomHeader, 2);
   CustomHeader[0]:= 'Content-Type: application/json; charset=utf-8';
   CustomHeader[1]:= 'Authorization: Bearer ' + api_key;
+  if organization <> '' then
+  begin
+    SetLength(CustomHeader, 3);
+    CustomHeader[2]:= 'OpenAI-Organization: ' + organization;
+  end;
 
   FOutStr:= '';
   ShowProcessDlg('Http Post ...');

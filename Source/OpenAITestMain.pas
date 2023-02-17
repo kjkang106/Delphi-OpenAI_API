@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, Spin, StrUtils, IniFiles;
+  Dialogs, StdCtrls, ExtCtrls, Spin, StrUtils;
 
 type
   TFOpenAITest = class(TForm)
@@ -19,11 +19,14 @@ type
     MemoPrompt: TMemo;
     BtImageEdit: TButton;
     BtImageVariation: TButton;
-    BtLoadMask: TButton;
-    ImgMask: TImage;
-    TaskDialog1: TTaskDialog;
+    BtMakeMask: TButton;
     BtCompletion: TButton;
     EtMaxToken: TSpinEdit;
+    Label1: TLabel;
+    Label2: TLabel;
+    LbImageFile: TLabel;
+    LbMaskFile: TLabel;
+    BtClearImgMask: TButton;
     procedure BtCreateImageClick(Sender: TObject);
     procedure CbImgListChange(Sender: TObject);
     procedure BtLoadImageClick(Sender: TObject);
@@ -31,15 +34,16 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure BtImageVariationClick(Sender: TObject);
-    procedure BtLoadMaskClick(Sender: TObject);
+    procedure BtMakeMaskClick(Sender: TObject);
     procedure BtCompletionClick(Sender: TObject);
+    procedure ImgOneMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure BtClearImgMaskClick(Sender: TObject);
   private
     { Private declarations }
-    RootPath, ImgPath: string;
-    function  LoadApiKey: string;
-    procedure SaveApiKey(ApiKey: string);
     procedure WriteLog(msg: string);
     procedure LoadImage(ImgFileName: string; Image: TImage);
+    procedure SaveAsMaskImage;
   public
     { Public declarations }
   end;
@@ -50,28 +54,35 @@ var
 implementation
 
 uses InetUtil, OpenAI, OpenAIImg, OpenAIHeader, WICImgUtil, ProgressDlg,
-  OpenAIComp;
+  OpenAIComp, InitInfo, PNGImgUtil;
 
 {$R *.dfm}
 
 procedure TFOpenAITest.BtImageEditClick(Sender: TObject);
 var
   OpenAIImg: TOpenAIImg;
+  ImgFileName: string;
+  MskFileName: string;
   Response: string;
   ai, aMax: Integer;
 begin
   WriteLog('CreateImageEdit');
   CbImgList.Items.Clear;
 
+  ImgFileName:= LbImageFile.Caption;
+  MskFileName:= LbMaskFile.Caption;
+  SaveAsMaskImage;
+
   OpenAIImg:= TOpenAIImg.Create;
   try
-    OpenAIImg.api_key := LoadApiKey;
+    OpenAIImg.api_key := ApiKey;
+    OpenAIImg.user_IDs:= EndUserIDs;
     OpenAIImg.ImgCount:= EtImgCnt.Value;
     OpenAIImg.ImgSize := IntToAis (CbImgSize.ItemIndex);
     OpenAIImg.ResFmt  := IntToAirf(CbImgRetFmt.ItemIndex);
-    OpenAIImg.ImgDir  := ExtractFilePath(ImgOne.Hint) + FormatDateTime('YYMMDD_HHNNSS', Now);
-    OpenAIImg.ImgMask := ImgMask.Hint;
-    Response:= OpenAIImg.CreateImageEdit(ImgOne.Hint, MemoPrompt.Text);
+    OpenAIImg.ImgDir  := ExtractFilePath(ImgFileName) + FormatDateTime('YYMMDD_HHNNSS', Now);
+    OpenAIImg.ImgMask := MskFileName;
+    Response:= OpenAIImg.CreateImageEdit(ImgFileName, MemoPrompt.Text);
 
     aMax:= OpenAIImg.zImgList.Count;
     for ai:= 0  to aMax - 1 do
@@ -97,20 +108,24 @@ end;
 procedure TFOpenAITest.BtImageVariationClick(Sender: TObject);
 var
   OpenAIImg: TOpenAIImg;
+  ImgFileName: string;
   Response: string;
   ai, aMax: Integer;
 begin
   WriteLog('CreateImageVariation');
   CbImgList.Items.Clear;
 
+  ImgFileName:= LbImageFile.Caption;
+
   OpenAIImg:= TOpenAIImg.Create;
   try
-    OpenAIImg.api_key := LoadApiKey;
+    OpenAIImg.api_key := ApiKey;
+    OpenAIImg.user_IDs:= EndUserIDs;
     OpenAIImg.ImgCount:= EtImgCnt.Value;
     OpenAIImg.ImgSize := IntToAis (CbImgSize.ItemIndex);
     OpenAIImg.ResFmt  := IntToAirf(CbImgRetFmt.ItemIndex);
-    OpenAIImg.ImgDir  := ExtractFilePath(ImgOne.Hint) + FormatDateTime('YYMMDD_HHNNSS', Now);
-    Response:= OpenAIImg.CreateImageVariation(ImgOne.Hint);
+    OpenAIImg.ImgDir  := ExtractFilePath(ImgFileName) + FormatDateTime('YYMMDD_HHNNSS', Now);
+    Response:= OpenAIImg.CreateImageVariation(ImgFileName);
 
     aMax:= OpenAIImg.zImgList.Count;
     for ai:= 0  to aMax - 1 do
@@ -151,15 +166,30 @@ begin
   end;
 end;
 
-procedure TFOpenAITest.BtLoadMaskClick(Sender: TObject);
+procedure TFOpenAITest.BtMakeMaskClick(Sender: TObject);
+var
+  ImgFileName: string;
+  MskFileName: string;
+begin
+  ImgFileName:= LbImageFile.Caption;
+  if ImgFileName = '' then
+    Exit;
+
+  MskFileName:= ExtractFilePath(ImgFileName) + 'Mask_' + ExtractFileName(ImgFileName);
+  ImgOne.Picture.SaveToFile(MskFileName);
+
+  LbMaskFile.Caption:= MskFileName;
+  LoadPngImage(MskFileName, ImgOne);
+end;
+
+procedure TFOpenAITest.BtClearImgMaskClick(Sender: TObject);
 var
   ImgFileName: string;
 begin
-  if PromptForFileName(ImgFileName, 'PNG Images|*.png|All Files|*.*',
-    '', 'Select Image', ImgPath) then
-  begin
-    LoadImage(ImgFileName, ImgMask);
-  end;
+  ImgFileName:= LbImageFile.Caption;
+  LoadImage(ImgFileName, ImgOne);
+
+  LbMaskFile.Caption:= '';
 end;
 
 procedure TFOpenAITest.BtCompletionClick(Sender: TObject);
@@ -172,7 +202,8 @@ begin
 
   OpenAIComp:= TOpenAIComp.Create;
   try
-    OpenAIComp.api_key          := LoadApiKey;
+    OpenAIComp.api_key          := ApiKey;
+    OpenAIComp.user_IDs         := EndUserIDs;
     OpenAIComp.Prompt           := MemoPrompt.Text;
     OpenAIComp.Max_tokens       := EtMaxToken.Value;
     OpenAIComp.Temperature      := 0;
@@ -204,7 +235,8 @@ begin
 
   OpenAIImg:= TOpenAIImg.Create;
   try
-    OpenAIImg.api_key := LoadApiKey;
+    OpenAIImg.api_key := ApiKey;
+    OpenAIImg.user_IDs:= EndUserIDs;
     OpenAIImg.ImgCount:= EtImgCnt.Value;
     OpenAIImg.ImgSize := IntToAis (CbImgSize.ItemIndex);
     OpenAIImg.ResFmt  := IntToAirf(CbImgRetFmt.ItemIndex);
@@ -281,14 +313,16 @@ begin
     ImgFile:= ImgStr;
     LoadImage(ImgDir + ImgFile, ImgOne);
   end;
+
+  LbImageFile.Caption:= ImgDir + ImgFile;
+  LbMaskFile.Caption := '';
 end;
 
 procedure TFOpenAITest.FormActivate(Sender: TObject);
-var
-  ApiKey: string;
 begin
   OnActivate:= nil;
-  if LoadApiKey = '' then
+  LoadInitInfo;
+  if ApiKey = '' then
   begin
     ApiKey:= InputBox('API_KEY', 'Input API Key', '');
     if ApiKey = '' then
@@ -303,44 +337,49 @@ begin
   RootPath:= IncludeTrailingPathDelimiter( GetCurrentDir );
   ImgPath := RootPath + 'Image\';
   ForceDirectories(ImgPath);
+
+  LbImageFile.Caption:= '';
+  LbMaskFile.Caption := '';
 end;
 
-function TFOpenAITest.LoadApiKey: string;
+procedure TFOpenAITest.ImgOneMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
 var
-  Ini: TIniFile;
+  MskFileName: string;
+  X1, X2, Y1, Y2: Integer;
+  ARect: TRect;
 begin
-  Ini:= TIniFile.Create(RootPath + 'Init.ini');
-  try
-    Result:= Ini.ReadString('OpenAI', 'API_KEY', '');
-  finally
-    Ini.Free;
-  end;
+  MskFileName:= LbMaskFile.Caption;
+  if MskFileName = '' then
+    Exit;
+
+  X1:= X - 10;  X2:= X + 10;
+  Y1:= Y - 10;  Y2:= Y + 10;
+  if X1 < 0 then X1:= 0;
+  if X2 > ImgOne.Width then X2:= ImgOne.Width;
+  if Y1 < 0 then Y1:= 0;
+  if Y2 > ImgOne.Height then Y2:= ImgOne.Height;
+  ARect:= Rect(X1, Y1, X2, Y2);
+
+  PngAddMaskRegion(ImgOne, ARect);
 end;
 
 procedure TFOpenAITest.LoadImage(ImgFileName: string; Image: TImage);
 begin
   if FileExists(ImgFileName) then
-  begin
-    LoadWicImage(ImgFileName, Image);
-    Image.Hint:= ImgFileName;
-  end
+    LoadWicImage(ImgFileName, Image)
   else
-  begin
     Image.Picture.Assign(nil);
-    Image.Hint:= '';
-  end;
 end;
 
-procedure TFOpenAITest.SaveApiKey(ApiKey: string);
+procedure TFOpenAITest.SaveAsMaskImage;
 var
-  Ini: TIniFile;
+  MskFileName: string;
 begin
-  Ini:= TIniFile.Create(RootPath + 'Init.ini');
-  try
-    Ini.WriteString('OpenAI', 'API_KEY', ApiKey);
-  finally
-    Ini.Free;
-  end;
+  MskFileName:= LbMaskFile.Caption;
+  if MskFileName = '' then
+    Exit;
+  ImgOne.Picture.SaveToFile(MskFileName);
 end;
 
 procedure TFOpenAITest.WriteLog(msg: string);

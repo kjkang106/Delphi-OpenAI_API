@@ -2,7 +2,7 @@ object FOpenAITest: TFOpenAITest
   Left = 0
   Top = 0
   Caption = 'FOpenAITest'
-  ClientHeight = 561
+  ClientHeight = 618
   ClientWidth = 1044
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,23 +17,45 @@ object FOpenAITest: TFOpenAITest
   TextHeight = 13
   object ImgOne: TImage
     Left = 8
-    Top = 39
+    Top = 87
     Width = 512
     Height = 512
     Stretch = True
+    OnMouseDown = ImgOneMouseDown
   end
-  object ImgMask: TImage
-    Left = 526
-    Top = 39
-    Width = 512
-    Height = 512
-    Stretch = True
+  object Label1: TLabel
+    Left = 8
+    Top = 43
+    Width = 49
+    Height = 13
+    Caption = 'Image File'
+  end
+  object Label2: TLabel
+    Left = 8
+    Top = 64
+    Width = 43
+    Height = 13
+    Caption = 'Mask File'
+  end
+  object LbImageFile: TLabel
+    Left = 96
+    Top = 43
+    Width = 49
+    Height = 13
+    Caption = 'Image File'
+  end
+  object LbMaskFile: TLabel
+    Left = 96
+    Top = 64
+    Width = 43
+    Height = 13
+    Caption = 'Mask File'
   end
   object MemoLog: TMemo
     Left = 526
-    Top = 304
+    Top = 255
     Width = 512
-    Height = 247
+    Height = 344
     TabOrder = 12
   end
   object BtCreateImage: TButton
@@ -102,8 +124,8 @@ object FOpenAITest: TFOpenAITest
   end
   object MemoPrompt: TMemo
     Left = 526
-    Top = 39
-    Width = 510
+    Top = 87
+    Width = 512
     Height = 162
     Lines.Strings = (
       'A cute baby sea otter')
@@ -127,14 +149,14 @@ object FOpenAITest: TFOpenAITest
     TabOrder = 8
     OnClick = BtImageVariationClick
   end
-  object BtLoadMask: TButton
+  object BtMakeMask: TButton
     Left = 601
     Top = 8
     Width = 75
     Height = 25
-    Caption = 'LoadMask'
+    Caption = 'MakeMask'
     TabOrder = 6
-    OnClick = BtLoadMaskClick
+    OnClick = BtMakeMaskClick
   end
   object BtCompletion: TButton
     Left = 940
@@ -155,14 +177,13 @@ object FOpenAITest: TFOpenAITest
     TabOrder = 9
     Value = 60
   end
-  object TaskDialog1: TTaskDialog
-    Buttons = <>
-    CommonButtons = []
-    DefaultButton = tcbNo
-    Flags = [tfShowMarqueeProgressBar, tfNoDefaultRadioButton]
-    RadioButtons = <>
-    Title = '1122334455'
-    Left = 168
-    Top = 304
+  object BtClearImgMask: TButton
+    Left = 57
+    Top = 62
+    Width = 26
+    Height = 19
+    Caption = 'X'
+    TabOrder = 13
+    OnClick = BtClearImgMaskClick
   end
 end

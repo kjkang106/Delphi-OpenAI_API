@@ -13,7 +13,9 @@ uses
   OpenAIImg in 'OpenAI\OpenAIImg.pas',
   ProgressDlg in 'OpenAI\ProgressDlg.pas' {FProgressDlg},
   ToneDown in 'Utils\ToneDown.pas' {FToneDown},
-  OpenAIComp in 'OpenAI\OpenAIComp.pas';
+  OpenAIComp in 'OpenAI\OpenAIComp.pas',
+  InitInfo in 'OpenAI\InitInfo.pas',
+  PNGImgUtil in 'Utils\PNGImgUtil.pas';
 
 {$R *.res}
 

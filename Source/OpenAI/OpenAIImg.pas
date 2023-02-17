@@ -14,7 +14,6 @@ type
     FImgCount: Integer;
     FImgSize : TAiImgSize;
     FResFmt  : TAiImgResFmt;
-    FImgUser : string;
 
     FImgDir  : string;
     FImgMask : string;
@@ -47,7 +46,6 @@ type
     property ImgCount: Integer      read FImgCount    write SetImgCount    default 1;
     property ImgSize : TAiImgSize   read FImgSize     write FImgSize       default ais1024;
     property ResFmt  : TAiImgResFmt read FResFmt      write FResFmt        default airfUrl;
-    property ImgUser : string       read FImgUser     write FImgUser;
 
     property ImgDir  : string       read FImgDir      write FImgDir;
     property ImgMask : string       read FImgMask     write FImgMask;
@@ -308,8 +306,8 @@ begin
   AddFormParam('n'              , IntToStr(ImgCount));
   AddFormParam('size'           , AisToStr(ImgSize));
   AddFormParam('response_format', AirfToStr(ResFmt));
-  if ImgUser <> '' then
-    AddFormParam('user'           , ImgUser);
+  if user_IDs <> '' then
+    AddFormParam('user'           , user_IDs);
 end;
 
 function TOpenAIImg.MakeSendDocCreateImages(APrompt: string;
@@ -324,8 +322,8 @@ begin
   AddJsonParam(SendObj, 'n'              , ImgCount);
   AddJsonParam(SendObj, 'size'           , AisToStr(ImgSize));
   AddJsonParam(SendObj, 'response_format', AirfToStr(ResFmt));
-  if ImgUser <> '' then
-    AddJsonParam(SendObj, 'user'           , ImgUser);
+  if user_IDs <> '' then
+    AddJsonParam(SendObj, 'user'           , user_IDs);
 end;
 
 function TOpenAIImg.MakeSendDocCreateImageVariation(ImgFileName: string;
@@ -350,8 +348,8 @@ begin
   AddFormParam('n'              , IntToStr(ImgCount));
   AddFormParam('size'           , AisToStr(ImgSize));
   AddFormParam('response_format', AirfToStr(ResFmt));
-  if ImgUser <> '' then
-    AddFormParam('user'           , ImgUser);
+  if user_IDs <> '' then
+    AddFormParam('user'           , user_IDs);
 end;
 
 function TOpenAIImg.GetValidPromopt(var APrompt: string; out OutStr: string): Boolean;
@@ -384,7 +382,6 @@ begin
   FImgCount:= 1;
   FImgSize := ais1024;
   FResFmt  := airfUrl;
-  FImgUser := '';
 
   FImgDir  := '';
   FImgMask := '';

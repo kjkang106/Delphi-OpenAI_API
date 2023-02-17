@@ -3,10 +3,11 @@ unit WICImgUtil;
 interface
 
 uses
-  SysUtils, Classes, Graphics, EncdDecd, ExtCtrls, pngimage;
+  SysUtils, Classes, Graphics, EncdDecd, ExtCtrls;
 
 function StrmToFile(Strm: TStream; ImgDir: string; var ImgFile: string): Boolean;
 procedure LoadWicImage(ImgFileName: string; Image: TImage);
+procedure SaveWicImage(ImgFileName: string; Image: TImage);
 
 function IsValidImageProp(ImgFileName: string; AlphaCheck: Boolean): Boolean;
 
@@ -14,6 +15,8 @@ function BJsonToImg(bStr, ImgDir: string; var ImgFile: string): Boolean;
 function ImgToBJSon(ImgDir, ImgFile: string; var bStr: AnsiString): Boolean;
 
 implementation
+
+uses PNGImgUtil;
 
 function StrmToFile(Strm: TStream; ImgDir: string; var ImgFile: string): Boolean;
 var
@@ -51,12 +54,32 @@ end;
 
 procedure LoadWicImage(ImgFileName: string; Image: TImage);
 var
-  WICImage: TWICImage;
+  WICImage  : TWICImage;
 begin
   WICImage:= TWICImage.Create;
   try
     WICImage.LoadFromFile(ImgFileName);
-    Image.Picture.Bitmap.Assign(WICImage);
+    Image.Picture.Assign(WICImage);
+  finally
+    WICImage.Free;
+  end;
+  Image.Parent.Repaint;
+end;
+
+procedure SaveWicImage(ImgFileName: string; Image: TImage);
+var
+  ImgPath: string;
+  WICImage: TWICImage;
+begin
+  ImgPath:= ExtractFilePath(ImgFileName);
+  ForceDirectories(ImgPath);
+  if FileExists(ImgFileName) then
+    DeleteFile(ImgFileName);
+
+  WICImage:= TWICImage.Create;
+  try
+    WICImage.Assign(Image.Picture);
+    WICImage.SaveToFile(ImgFileName);
   finally
     WICImage.Free;
   end;
@@ -65,7 +88,6 @@ end;
 function IsValidImageProp(ImgFileName: string; AlphaCheck: Boolean): Boolean;
 var
   WICImage: TWICImage;
-  PngImage: TPngImage;
 begin
   WICImage:= TWICImage.Create;
   try
@@ -79,16 +101,7 @@ begin
   end;
 
   if AlphaCheck then
-  begin
-    PngImage:= TPngImage.Create;
-    try
-      PngImage.LoadFromFile(ImgFileName);
-      Result:= (PngImage.Header.ColorType = COLOR_GRAYSCALEALPHA) or
-               (PngImage.Header.ColorType = COLOR_RGBALPHA);
-    finally
-      PngImage.Free;
-    end;
-  end;
+    Result:= PngHasAlpha(ImgFileName);
 end;
 
 function BJsonToImg(bStr, ImgDir: string; var ImgFile: string): Boolean;

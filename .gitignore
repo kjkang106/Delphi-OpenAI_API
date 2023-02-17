@@ -1,6 +1,7 @@
 EXE/Init.ini
 EXE/Image
 Source/Debug
+Source/Release
 Source/__history
 Source/OpenAI/__history
 Source/Utils/__history

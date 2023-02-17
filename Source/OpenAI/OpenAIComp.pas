@@ -22,7 +22,6 @@ type
     FFrequency_penalty: TJSONValue;
     FBest_of          : TJSONValue;
     FLogit_bias       : TJSONValue;
-    FUser             : string;
 
     FID               : string;
     FModel            : string;
@@ -63,7 +62,6 @@ type
     property Presence_penalty: Double   read GetPresence_penalty  write SetPresence_penalty ;
     property Frequency_penalty: Double  read GetFrequency_penalty write SetFrequency_penalty;
     property StopStr: string            read GetStopStr           write SetStopStr          ;
-    property User: string               read FUser                write FUser               ;
 
     property ID: string                 read FID                  write FID                 ;
     property Model: string              read FModel               write FModel              ;
@@ -261,7 +259,6 @@ begin
   FStopStr          := TJSONNull.Create;
 //  FStream     := False;
 //  FLogProbs
-  FUser             := '';
 
   Init_List;
 end;
@@ -297,8 +294,8 @@ begin
     AddJsonParam(SendObj, 'presence_penalty'  , Presence_penalty);
   if not(FStopStr is TJSONNull) then
     AddJsonParam(SendObj, 'stop'              , SimpleEscapeJsonParamStr(StopStr));
-  if User <> '' then
-    AddJsonParam(SendObj, 'user'              , User);
+  if user_IDs <> '' then
+    AddJsonParam(SendObj, 'user'              , user_IDs);
 end;
 
 procedure TOpenAIComp.ParseChoices(RecvObj: TJSONObject);
