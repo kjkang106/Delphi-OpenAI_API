@@ -27,6 +27,14 @@ type
     LbImageFile: TLabel;
     LbMaskFile: TLabel;
     BtClearImgMask: TButton;
+    CbModels: TComboBox;
+    Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    EtTemperature: TEdit;
+    EtTopP: TEdit;
+    EtMaskSize: TSpinEdit;
     procedure BtCreateImageClick(Sender: TObject);
     procedure CbImgListChange(Sender: TObject);
     procedure BtLoadImageClick(Sender: TObject);
@@ -39,8 +47,13 @@ type
     procedure ImgOneMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure BtClearImgMaskClick(Sender: TObject);
+    procedure ImgOneMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure ImgOneMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     { Private declarations }
+    lMaskImgDown: Boolean;
     procedure WriteLog(msg: string);
     procedure LoadImage(ImgFileName: string; Image: TImage);
     procedure SaveAsMaskImage;
@@ -206,12 +219,13 @@ begin
     OpenAIComp.user_IDs         := EndUserIDs;
     OpenAIComp.Prompt           := MemoPrompt.Text;
     OpenAIComp.Max_tokens       := EtMaxToken.Value;
-    OpenAIComp.Temperature      := 0;
-    OpenAIComp.Top_p            := 1.0;
+    OpenAIComp.Temperature      := StrToFloatDef(EtTemperature.Text, 0);
+    OpenAIComp.Top_p            := StrToFloatDef(EtTopP.Text, 0);
     OpenAIComp.Frequency_penalty:= 0.0;
     OpenAIComp.Presence_penalty := 0.0;
     //OpenAIComp.StopStr          := sLineBreak;
-    Response:= OpenAIComp.CreateCompletions(LASTEST_MODEL_GPT3);
+
+    Response:= OpenAIComp.CreateCompletions( AimToStr(IntToAim(CbModels.ItemIndex)) );
 
     aMax:= Length(OpenAIComp.zChoices);
     for ai:= 0  to aMax - 1 do
@@ -346,22 +360,44 @@ procedure TFOpenAITest.ImgOneMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var
   MskFileName: string;
-  X1, X2, Y1, Y2: Integer;
-  ARect: TRect;
 begin
   MskFileName:= LbMaskFile.Caption;
   if MskFileName = '' then
     Exit;
 
-  X1:= X - 10;  X2:= X + 10;
-  Y1:= Y - 10;  Y2:= Y + 10;
-  if X1 < 0 then X1:= 0;
-  if X2 > ImgOne.Width then X2:= ImgOne.Width;
-  if Y1 < 0 then Y1:= 0;
-  if Y2 > ImgOne.Height then Y2:= ImgOne.Height;
-  ARect:= Rect(X1, Y1, X2, Y2);
+  lMaskImgDown:= PngAddMaskStart(ImgOne);
+end;
 
-  PngAddMaskRegion(ImgOne, ARect);
+procedure TFOpenAITest.ImgOneMouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+var
+  X1, X2, Y1, Y2: Integer;
+  ARect: TRect;
+  MaskSize: Integer;
+begin
+  if lMaskImgDown then
+  begin
+    MaskSize:= StrToIntDef(EtMaskSize.Text, 5);
+    X1:= X - MaskSize;  X2:= X + MaskSize;
+    Y1:= Y - MaskSize;  Y2:= Y + MaskSize;
+    if X1 < 0 then X1:= 0;
+    if X2 > ImgOne.Width then X2:= ImgOne.Width;
+    if Y1 < 0 then Y1:= 0;
+    if Y2 > ImgOne.Height then Y2:= ImgOne.Height;
+    ARect:= Rect(X1, Y1, X2, Y2);
+
+    PngAddMaskRegion(ImgOne, ARect);
+  end;
+end;
+
+procedure TFOpenAITest.ImgOneMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if lMaskImgDown then
+  begin
+    lMaskImgDown:= False;
+    PngAddMaskEnd(ImgOne);
+  end;
 end;
 
 procedure TFOpenAITest.LoadImage(ImgFileName: string; Image: TImage);

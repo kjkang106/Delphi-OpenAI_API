@@ -8,6 +8,8 @@ uses
 procedure LoadPngImage(ImgFileName: string; Image: TImage);
 function  PngHasAlpha(ImgFileName: string): Boolean;
 
+function  PngAddMaskStart (Image: TImage): Boolean;
+procedure PngAddMaskEnd   (Image: TImage);
 procedure PngAddMaskRegion(Image: TImage; ARect: TRect);
 
 implementation
@@ -50,6 +52,29 @@ begin
   end;
 end;
 
+function PngAddMaskStart(Image: TImage): Boolean;
+var
+  PngImage: TPngImage;
+begin
+  try
+    PngImage:= TPngImage(Image.Picture.Graphic);
+  except
+    Exit(False);
+  end;
+
+  Result:= True;
+  Image.Parent.DoubleBuffered:= True;
+end;
+
+procedure PngAddMaskEnd(Image: TImage);
+begin
+  try
+    TPngImage(Image.Picture.Graphic).Modified:= True;
+  except
+  end;
+  Image.Parent.DoubleBuffered:= False;
+end;
+
 procedure PngAddMaskRegion(Image: TImage; ARect: TRect);
 var
   ZoomRate: Double;
@@ -57,7 +82,12 @@ var
   pScanline: pRGBLine;
   Y, X: Integer;
 begin
-  PngImage:= TPngImage(Image.Picture.Graphic);
+  try
+    PngImage:= TPngImage(Image.Picture.Graphic);
+  except
+    Exit;
+  end;
+
   if PngImage.Width <> Image.Width then
   begin
     ZoomRate:= PngImage.Width / Image.Width;
@@ -82,9 +112,6 @@ begin
     end;
   end;
   PngImage.Modified:= True;
-
-//  Image.Picture.Assign(PngImage);
-//  Image.Parent.Repaint;
 end;
 
 end.

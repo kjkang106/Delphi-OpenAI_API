@@ -24,12 +24,17 @@ const
 type
   TAiImgSize   = (ais256, ais512, ais1024);
   TAiImgResFmt = (airfUrl, airfB64Json);
+  TAiModel     = (aimDav, aimCur, aimBab, aimAda);
+
 
 function AisToStr(AiImgSize: TAiImgSize): string;
 function IntToAis(Idx: Integer): TAiImgSize;
 
 function AirfToStr(AiImgResFmt: TAiImgResFmt): string;
 function IntToAirf(Idx: Integer): TAiImgResFmt;
+
+function AimToStr(AiModel: TAiModel): string;
+function IntToAim(Idx: Integer): TAiModel;
 
 implementation
 
@@ -68,6 +73,24 @@ begin
     Exit(airfUrl);
 
   Result:= TAiImgResFmt(Idx);
+end;
+
+function AimToStr(AiModel: TAiModel): string;
+begin
+  case AiModel of
+    aimDav: Result:= LASTEST_MODEL_Davinci;
+    aimCur: Result:= LASTEST_MODEL_Curie;
+    aimBab: Result:= LASTEST_MODEL_Babbage;
+    aimAda: Result:= LASTEST_MODEL_Ada;
+  end;
+end;
+
+function IntToAim(Idx: Integer): TAiModel;
+begin
+  if (Idx < 0) or (Idx > Ord(aimAda)) then
+    Exit(aimDav);
+
+  Result:= TAiModel(Idx);
 end;
 
 end.

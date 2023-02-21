@@ -22,6 +22,8 @@ object FOpenAITest: TFOpenAITest
     Height = 512
     Stretch = True
     OnMouseDown = ImgOneMouseDown
+    OnMouseMove = ImgOneMouseMove
+    OnMouseUp = ImgOneMouseUp
   end
   object Label1: TLabel
     Left = 8
@@ -40,23 +42,53 @@ object FOpenAITest: TFOpenAITest
   object LbImageFile: TLabel
     Left = 96
     Top = 43
-    Width = 49
+    Width = 424
     Height = 13
+    AutoSize = False
     Caption = 'Image File'
   end
   object LbMaskFile: TLabel
     Left = 96
     Top = 64
-    Width = 43
+    Width = 424
     Height = 13
+    AutoSize = False
     Caption = 'Mask File'
+  end
+  object Label3: TLabel
+    Left = 526
+    Top = 39
+    Width = 33
+    Height = 13
+    Caption = 'Models'
+  end
+  object Label4: TLabel
+    Left = 677
+    Top = 39
+    Width = 52
+    Height = 13
+    Caption = 'Max Token'
+  end
+  object Label5: TLabel
+    Left = 767
+    Top = 39
+    Width = 62
+    Height = 13
+    Caption = 'Temperature'
+  end
+  object Label6: TLabel
+    Left = 858
+    Top = 39
+    Width = 30
+    Height = 13
+    Caption = 'Top_p'
   end
   object MemoLog: TMemo
     Left = 526
     Top = 255
     Width = 512
     Height = 344
-    TabOrder = 12
+    TabOrder = 11
   end
   object BtCreateImage: TButton
     Left = 194
@@ -129,10 +161,10 @@ object FOpenAITest: TFOpenAITest
     Height = 162
     Lines.Strings = (
       'A cute baby sea otter')
-    TabOrder = 11
+    TabOrder = 10
   end
   object BtImageEdit: TButton
-    Left = 679
+    Left = 845
     Top = 8
     Width = 96
     Height = 25
@@ -141,7 +173,7 @@ object FOpenAITest: TFOpenAITest
     OnClick = BtImageEditClick
   end
   object BtImageVariation: TButton
-    Left = 776
+    Left = 942
     Top = 8
     Width = 96
     Height = 25
@@ -159,17 +191,17 @@ object FOpenAITest: TFOpenAITest
     OnClick = BtMakeMaskClick
   end
   object BtCompletion: TButton
-    Left = 940
-    Top = 8
+    Left = 942
+    Top = 55
     Width = 96
     Height = 25
     Caption = 'Completion'
-    TabOrder = 10
+    TabOrder = 16
     OnClick = BtCompletionClick
   end
   object EtMaxToken: TSpinEdit
-    Left = 878
-    Top = 10
+    Left = 677
+    Top = 57
     Width = 59
     Height = 22
     MaxValue = 2048
@@ -183,7 +215,52 @@ object FOpenAITest: TFOpenAITest
     Width = 26
     Height = 19
     Caption = 'X'
-    TabOrder = 13
+    TabOrder = 12
     OnClick = BtClearImgMaskClick
+  end
+  object CbModels: TComboBox
+    Left = 526
+    Top = 57
+    Width = 145
+    Height = 21
+    Style = csDropDownList
+    ItemIndex = 0
+    TabOrder = 13
+    Text = 'Davinci'
+    Items.Strings = (
+      'Davinci'
+      'Curie'
+      'Babbage'
+      'Ada')
+  end
+  object EtTemperature: TEdit
+    Left = 767
+    Top = 58
+    Width = 59
+    Height = 21
+    MaxLength = 3
+    NumbersOnly = True
+    TabOrder = 14
+    Text = '0'
+  end
+  object EtTopP: TEdit
+    Left = 858
+    Top = 58
+    Width = 59
+    Height = 21
+    MaxLength = 3
+    NumbersOnly = True
+    TabOrder = 15
+    Text = '1.0'
+  end
+  object EtMaskSize: TSpinEdit
+    Left = 681
+    Top = 10
+    Width = 41
+    Height = 22
+    MaxValue = 50
+    MinValue = 1
+    TabOrder = 17
+    Value = 5
   end
 end
