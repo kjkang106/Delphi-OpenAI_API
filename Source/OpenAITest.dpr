@@ -15,7 +15,8 @@ uses
   ToneDown in 'Utils\ToneDown.pas' {FToneDown},
   OpenAIComp in 'OpenAI\OpenAIComp.pas',
   InitInfo in 'OpenAI\InitInfo.pas',
-  PNGImgUtil in 'Utils\PNGImgUtil.pas';
+  PNGImgUtil in 'Utils\PNGImgUtil.pas',
+  ImgView in 'ImgView.pas' {FImgView};
 
 {$R *.res}
 

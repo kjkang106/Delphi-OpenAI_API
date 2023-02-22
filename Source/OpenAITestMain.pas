@@ -51,12 +51,16 @@ type
       Y: Integer);
     procedure ImgOneMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure ImgOneDblClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
     lMaskImgDown: Boolean;
     procedure WriteLog(msg: string);
     procedure LoadImage(ImgFileName: string; Image: TImage);
     procedure SaveAsMaskImage;
+    procedure LoadLastValues;
+    procedure SaveLastValues;
   public
     { Public declarations }
   end;
@@ -67,7 +71,7 @@ var
 implementation
 
 uses InetUtil, OpenAI, OpenAIImg, OpenAIHeader, WICImgUtil, ProgressDlg,
-  OpenAIComp, InitInfo, PNGImgUtil;
+  OpenAIComp, InitInfo, PNGImgUtil, ImgView;
 
 {$R *.dfm}
 
@@ -88,13 +92,14 @@ begin
 
   OpenAIImg:= TOpenAIImg.Create;
   try
-    OpenAIImg.api_key := ApiKey;
-    OpenAIImg.user_IDs:= EndUserIDs;
-    OpenAIImg.ImgCount:= EtImgCnt.Value;
-    OpenAIImg.ImgSize := IntToAis (CbImgSize.ItemIndex);
-    OpenAIImg.ResFmt  := IntToAirf(CbImgRetFmt.ItemIndex);
-    OpenAIImg.ImgDir  := ExtractFilePath(ImgFileName) + FormatDateTime('YYMMDD_HHNNSS', Now);
-    OpenAIImg.ImgMask := MskFileName;
+    OpenAIImg.api_key     := ApiKey;
+    OpenAIImg.organization:= Organization;
+    OpenAIImg.user_IDs    := EndUserIDs;
+    OpenAIImg.ImgCount    := EtImgCnt.Value;
+    OpenAIImg.ImgSize     := IntToAis (CbImgSize.ItemIndex);
+    OpenAIImg.ResFmt      := IntToAirf(CbImgRetFmt.ItemIndex);
+    OpenAIImg.ImgDir      := ExtractFilePath(ImgFileName) + FormatDateTime('YYMMDD_HHNNSS', Now);
+    OpenAIImg.ImgMask     := MskFileName;
     Response:= OpenAIImg.CreateImageEdit(ImgFileName, MemoPrompt.Text);
 
     aMax:= OpenAIImg.zImgList.Count;
@@ -132,12 +137,13 @@ begin
 
   OpenAIImg:= TOpenAIImg.Create;
   try
-    OpenAIImg.api_key := ApiKey;
-    OpenAIImg.user_IDs:= EndUserIDs;
-    OpenAIImg.ImgCount:= EtImgCnt.Value;
-    OpenAIImg.ImgSize := IntToAis (CbImgSize.ItemIndex);
-    OpenAIImg.ResFmt  := IntToAirf(CbImgRetFmt.ItemIndex);
-    OpenAIImg.ImgDir  := ExtractFilePath(ImgFileName) + FormatDateTime('YYMMDD_HHNNSS', Now);
+    OpenAIImg.api_key     := ApiKey;
+    OpenAIImg.organization:= Organization;
+    OpenAIImg.user_IDs    := EndUserIDs;
+    OpenAIImg.ImgCount    := EtImgCnt.Value;
+    OpenAIImg.ImgSize     := IntToAis (CbImgSize.ItemIndex);
+    OpenAIImg.ResFmt      := IntToAirf(CbImgRetFmt.ItemIndex);
+    OpenAIImg.ImgDir      := ExtractFilePath(ImgFileName) + FormatDateTime('YYMMDD_HHNNSS', Now);
     Response:= OpenAIImg.CreateImageVariation(ImgFileName);
 
     aMax:= OpenAIImg.zImgList.Count;
@@ -216,6 +222,7 @@ begin
   OpenAIComp:= TOpenAIComp.Create;
   try
     OpenAIComp.api_key          := ApiKey;
+    OpenAIComp.organization     := Organization;
     OpenAIComp.user_IDs         := EndUserIDs;
     OpenAIComp.Prompt           := MemoPrompt.Text;
     OpenAIComp.Max_tokens       := EtMaxToken.Value;
@@ -249,12 +256,13 @@ begin
 
   OpenAIImg:= TOpenAIImg.Create;
   try
-    OpenAIImg.api_key := ApiKey;
-    OpenAIImg.user_IDs:= EndUserIDs;
-    OpenAIImg.ImgCount:= EtImgCnt.Value;
-    OpenAIImg.ImgSize := IntToAis (CbImgSize.ItemIndex);
-    OpenAIImg.ResFmt  := IntToAirf(CbImgRetFmt.ItemIndex);
-    OpenAIImg.ImgDir  := ImgPath + FormatDateTime('YYMMDD_HHNNSS', Now);
+    OpenAIImg.api_key     := ApiKey;
+    OpenAIImg.organization:= Organization;
+    OpenAIImg.user_IDs    := EndUserIDs;
+    OpenAIImg.ImgCount    := EtImgCnt.Value;
+    OpenAIImg.ImgSize     := IntToAis (CbImgSize.ItemIndex);
+    OpenAIImg.ResFmt      := IntToAirf(CbImgRetFmt.ItemIndex);
+    OpenAIImg.ImgDir      := ImgPath + FormatDateTime('YYMMDD_HHNNSS', Now);
     Response:= OpenAIImg.CreateImages(MemoPrompt.Text);
 
     aMax:= OpenAIImg.zImgList.Count;
@@ -337,13 +345,20 @@ begin
   OnActivate:= nil;
   LoadInitInfo;
   if ApiKey = '' then
-  begin
     ApiKey:= InputBox('API_KEY', 'Input API Key', '');
-    if ApiKey = '' then
-      PostMessage(Handle, WM_CLOSE, 0, 0)
-    else
-      SaveApiKey(ApiKey);
+
+  if ApiKey = '' then
+    PostMessage(Handle, WM_CLOSE, 0, 0)
+  else
+  begin
+    SaveApiKey(ApiKey);
+    LoadLastValues;
   end;
+end;
+
+procedure TFOpenAITest.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  SaveLastValues;
 end;
 
 procedure TFOpenAITest.FormCreate(Sender: TObject);
@@ -354,6 +369,20 @@ begin
 
   LbImageFile.Caption:= '';
   LbMaskFile.Caption := '';
+end;
+
+procedure TFOpenAITest.ImgOneDblClick(Sender: TObject);
+var
+  ImgFileName: string;
+begin
+  if ImgOne.Picture = nil then
+    Exit;
+  ImgFileName:= LbMaskFile.Caption;
+  if ImgFileName = '' then
+    ImgFileName:= LbImageFile.Caption;
+
+  if ImgFileName <> '' then
+    PopImgView(Self, ImgFileName);
 end;
 
 procedure TFOpenAITest.ImgOneMouseDown(Sender: TObject; Button: TMouseButton;
@@ -408,6 +437,21 @@ begin
     Image.Picture.Assign(nil);
 end;
 
+procedure TFOpenAITest.LoadLastValues;
+begin
+  EtImgCnt.Text        := LoadLastInfo('Image_Count'  , EtImgCnt.Text);
+  CbImgSize.ItemIndex  := LoadLastInfo('Image_Size'   , CbImgSize.ItemIndex);
+  CbImgRetFmt.ItemIndex:= LoadLastInfo('Image_Format' , CbImgRetFmt.ItemIndex);
+
+  EtMaskSize.Text      := LoadLastInfo('Mask_Size'    , EtMaskSize.Text);
+  CbModels.ItemIndex   := LoadLastInfo('Models'       , CbModels.ItemIndex);
+  EtMaskSize.Text      := LoadLastInfo('Mask_Size'    , EtMaskSize.Text);
+  EtMaxToken.Text      := LoadLastInfo('Mask_Token'   , EtMaxToken.Text);
+  EtTemperature.Text   := LoadLastInfo('Temperature'  , EtTemperature.Text);
+  EtTopP.Text          := LoadLastInfo('EtTopP'       , EtTopP.Text);
+  MemoPrompt.Text      := LoadLastInfo('Prompt'       , MemoPrompt.Text);
+end;
+
 procedure TFOpenAITest.SaveAsMaskImage;
 var
   MskFileName: string;
@@ -416,6 +460,24 @@ begin
   if MskFileName = '' then
     Exit;
   ImgOne.Picture.SaveToFile(MskFileName);
+end;
+
+procedure TFOpenAITest.SaveLastValues;
+begin
+  if ApiKey = '' then
+    Exit;
+
+  SaveLastInfo('Image_Count'  , EtImgCnt.Text);
+  SaveLastInfo('Image_Size'   , CbImgSize.ItemIndex);
+  SaveLastInfo('Image_Format' , CbImgRetFmt.ItemIndex);
+
+  SaveLastInfo('Mask_Size'    , EtMaskSize.Text);
+  SaveLastInfo('Models'       , CbModels.ItemIndex);
+  SaveLastInfo('Mask_Size'    , EtMaskSize.Text);
+  SaveLastInfo('Mask_Token'   , EtMaxToken.Text);
+  SaveLastInfo('Temperature'  , EtTemperature.Text);
+  SaveLastInfo('EtTopP'       , EtTopP.Text);
+  SaveLastInfo('Prompt'       , MemoPrompt.Text);
 end;
 
 procedure TFOpenAITest.WriteLog(msg: string);

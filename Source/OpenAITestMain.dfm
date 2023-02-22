@@ -1,6 +1,7 @@
 object FOpenAITest: TFOpenAITest
   Left = 0
   Top = 0
+  ActiveControl = MemoPrompt
   Caption = 'FOpenAITest'
   ClientHeight = 618
   ClientWidth = 1044
@@ -12,6 +13,7 @@ object FOpenAITest: TFOpenAITest
   Font.Style = []
   OldCreateOrder = False
   OnActivate = FormActivate
+  OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -21,6 +23,7 @@ object FOpenAITest: TFOpenAITest
     Width = 512
     Height = 512
     Stretch = True
+    OnDblClick = ImgOneDblClick
     OnMouseDown = ImgOneMouseDown
     OnMouseMove = ImgOneMouseMove
     OnMouseUp = ImgOneMouseUp
