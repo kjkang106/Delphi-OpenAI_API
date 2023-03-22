@@ -1,4 +1,4 @@
-unit OpenAIComp;
+unit OpenAIChatComp;
 
 interface
 
@@ -6,10 +6,16 @@ uses
   Classes, SysUtils, OpenAIHeader, OpenAI, DBXJSON, StrUtil;
 
 type
-  TOpenAIComp = class(TOpenAI)
+  TChatMsg = record
+    Role   : string;
+    Content: string;
+  end;
+  TzChatMsg = array of TChatMsg;
+
+  TOpenAIChatComp = class(TOpenAI)
   private
-    FPrompt           : string;
-    FSuffix           : TJSONValue;
+    FzChatMsg         : TzChatMsg;
+
     FMax_Tokens       : TJSONValue;
     FTemperature      : TJSONValue;
     FTop_p            : TJSONValue;
@@ -20,41 +26,39 @@ type
     FStopStr          : TJSONValue;
     FPresence_penalty : TJSONValue;
     FFrequency_penalty: TJSONValue;
-    FBest_of          : TJSONValue;
-    FLogit_bias       : TJSONValue;
 
     FID               : string;
     FModel            : string;
-    FzChoices         : TStringArray;
+    FzChoices         : TzChatMsg;
     procedure Init_List;
 
-    function MakeSendDocCompletion(AModel: string;
+    function MakeSendDocChatCompletion(AModel: string;
       var SendObj: TJSONObject; out OutStr: string): Boolean;
     procedure ParseChoices(RecvObj: TJSONObject);
 
     function GetValidProp(AModel: string; out OutStr: string): Boolean;
-    function GetMax_Tokens: Integer;
-    procedure SetMax_Tokens(const Value: Integer);
-    function GetTemperature: Double;
-    procedure SetTemperature(const Value: Double);
-    function GetTop_p: Double;
-    procedure SetTop_p(const Value: Double);
     function GetCompCnt: Integer;
-    procedure SetCompCnt(const Value: Integer);
     function GetFrequency_penalty: Double;
+    function GetMax_Tokens: Integer;
     function GetPresence_penalty: Double;
-    procedure SetFrequency_penalty(const Value: Double);
-    procedure SetPresence_penalty(const Value: Double);
     function GetStopStr: string;
+    function GetTemperature: Double;
+    function GetTop_p: Double;
+    procedure SetCompCnt(const Value: Integer);
+    procedure SetFrequency_penalty(const Value: Double);
+    procedure SetMax_Tokens(const Value: Integer);
+    procedure SetPresence_penalty(const Value: Double);
     procedure SetStopStr(const Value: string);
+    procedure SetTemperature(const Value: Double);
+    procedure SetTop_p(const Value: Double);
   public
     constructor Create; override;
     destructor Destroy; override;
 
     procedure Init_All;
-    function CreateCompletions(AModel: string): string;
+    procedure AddChatMessage(role, msg: string);
+    function CreateChatCompletions(AModel: string): string;
 
-    property Prompt: string             read FPrompt              write FPrompt             ;
     property Max_tokens: Integer        read GetMax_Tokens        write SetMax_Tokens       ;
     property Temperature: Double        read GetTemperature       write SetTemperature      ;
     property Top_p: Double              read GetTop_p             write SetTop_p            ;
@@ -65,23 +69,42 @@ type
 
     property ID: string                 read FID                  write FID                 ;
     property Model: string              read FModel               write FModel              ;
-    property zChoices: TStringArray     read FzChoices            write FzChoices           ;
+    property zChoices: TzChatMsg        read FzChoices            write FzChoices           ;
   end;
 
 implementation
 
 uses JSonUtil;
 
-{ TOpenAIComp }
 
-constructor TOpenAIComp.Create;
+{ TOpenAIChatComp }
+
+procedure TOpenAIChatComp.AddChatMessage(role, msg: string);
+var
+  nCnt: Integer;
+begin
+  msg:= Trim(msg);
+  if msg = '' then
+    Exit;
+  role:= Trim(role);
+  if role = '' then
+    role:= 'user';
+
+  nCnt:= Length(FzChatMsg);
+  SetLength(FzChatMsg, nCnt + 1);
+
+  FzChatMsg[nCnt].Role   := role;
+  FzChatMsg[nCnt].Content:= msg;
+end;
+
+constructor TOpenAIChatComp.Create;
 begin
   inherited;
 
   Init_All;
 end;
 
-function TOpenAIComp.CreateCompletions(AModel: string): string;
+function TOpenAIChatComp.CreateChatCompletions(AModel: string): string;
 var
   AUrl: string;
   OutStr: string;
@@ -90,11 +113,11 @@ var
   JsonStr: string;
 begin
   Init_List;
-  AUrl:= OPEN_AI_URL + '/' + COMPLETION_URL;
+  AUrl:= OPEN_AI_URL + '/' + CHAT_COMPLE_URL;
 
   SendObj:= TJSONObject.Create;
   try
-    if not MakeSendDocCompletion(AModel, SendObj, OutStr) then
+    if not MakeSendDocChatCompletion(AModel, SendObj, OutStr) then
     begin
       Result:= OutStr;
       Exit;
@@ -139,7 +162,7 @@ begin
     Result:= 'FAIL: Returned Empty';
 end;
 
-destructor TOpenAIComp.Destroy;
+destructor TOpenAIChatComp.Destroy;
 begin
   FMax_Tokens.Free;
   FTemperature.Free;
@@ -152,7 +175,7 @@ begin
   inherited;
 end;
 
-function TOpenAIComp.GetCompCnt: Integer;
+function TOpenAIChatComp.GetCompCnt: Integer;
 begin
   if FCompCnt is TJSONNull then
     Result:= 11
@@ -160,7 +183,7 @@ begin
     Result:= TJSONNumber(FCompCnt).AsInt;
 end;
 
-function TOpenAIComp.GetFrequency_penalty: Double;
+function TOpenAIChatComp.GetFrequency_penalty: Double;
 begin
   if FFrequency_penalty is TJSONNull then
     Result:= 0
@@ -168,7 +191,7 @@ begin
     Result:= TJSONNumber(FFrequency_penalty).AsDouble;
 end;
 
-function TOpenAIComp.GetMax_Tokens: Integer;
+function TOpenAIChatComp.GetMax_Tokens: Integer;
 begin
   if FMax_Tokens is TJSONNull then
     Result:= 16
@@ -176,7 +199,7 @@ begin
     Result:= TJSONNumber(FMax_Tokens).AsInt;
 end;
 
-function TOpenAIComp.GetPresence_penalty: Double;
+function TOpenAIChatComp.GetPresence_penalty: Double;
 begin
   if FPresence_penalty is TJSONNull then
     Result:= 0
@@ -184,7 +207,7 @@ begin
     Result:= TJSONNumber(FPresence_penalty).AsDouble;
 end;
 
-function TOpenAIComp.GetStopStr: string;
+function TOpenAIChatComp.GetStopStr: string;
 begin
   if FStopStr is TJSONNull then
     Result:= ''
@@ -192,7 +215,7 @@ begin
     Result:= TJSONString(FStopStr).Value;
 end;
 
-function TOpenAIComp.GetTemperature: Double;
+function TOpenAIChatComp.GetTemperature: Double;
 begin
   if FTemperature is TJSONNull then
     Result:= 1
@@ -200,7 +223,7 @@ begin
     Result:= TJSONNumber(FTemperature).AsDouble;
 end;
 
-function TOpenAIComp.GetTop_p: Double;
+function TOpenAIChatComp.GetTop_p: Double;
 begin
   if FTop_p is TJSONNull then
     Result:= 1
@@ -208,7 +231,8 @@ begin
     Result:= TJSONNumber(FTop_p).AsDouble;
 end;
 
-function TOpenAIComp.GetValidProp(AModel: string; out OutStr: string): Boolean;
+function TOpenAIChatComp.GetValidProp(AModel: string;
+  out OutStr: string): Boolean;
 var
   IsOK: Boolean;
   mi: TAiModel;
@@ -254,9 +278,9 @@ begin
   Result:= True;
 end;
 
-procedure TOpenAIComp.Init_All;
+procedure TOpenAIChatComp.Init_All;
 begin
-  FPrompt           := '';
+  SetLength(FzChatMsg, 0);
   FMax_Tokens       := TJSONNull.Create;
   FTemperature      := TJSONNull.Create;
   FTop_p            := TJSONNull.Create;
@@ -270,23 +294,37 @@ begin
   Init_List;
 end;
 
-procedure TOpenAIComp.Init_List;
+procedure TOpenAIChatComp.Init_List;
 begin
   FID:= '';
   FModel:= '';
   SetLength(FzChoices, 0);
 end;
 
-function TOpenAIComp.MakeSendDocCompletion(AModel: string;
+function TOpenAIChatComp.MakeSendDocChatCompletion(AModel: string;
   var SendObj: TJSONObject; out OutStr: string): Boolean;
+var
+  jArray : TJSONArray;
+  jSubDoc: TJSONObject;
+  mi, mMax: Integer;
 begin
   Result:= False;
   if not GetValidProp(AModel, OutStr) then
     Exit;
 
   Result:= True;
-  AddJsonParam(SendObj, 'model'             , AModel);
-  AddJsonParam(SendObj, 'prompt'            , SimpleEscapeJsonParamStr(Prompt));
+  AddJsonParam(SendObj, 'model', AModel);
+
+  jArray:= TJSONArray.Create;
+  mMax:= Length(FzChatMsg);
+  for mi:= 0 to mMax - 1 do
+  begin
+    jSubDoc:= TJSONObject.Create;
+    AddJsonParam(jSubDoc, 'role'   , SimpleEscapeJsonParamStr(FzChatMsg[mi].Role));
+    AddJsonParam(jSubDoc, 'content', SimpleEscapeJsonParamStr(FzChatMsg[mi].Content));
+    jArray.Add(jSubDoc);
+  end;
+  AddJsonParam(SendObj, 'messages', jArray);
   if not(FMax_Tokens is TJSONNull) then
     AddJsonParam(SendObj, 'max_tokens'        , Max_tokens);
   if not(FTemperature is TJSONNull) then
@@ -305,11 +343,11 @@ begin
     AddJsonParam(SendObj, 'user'              , user_IDs);
 end;
 
-procedure TOpenAIComp.ParseChoices(RecvObj: TJSONObject);
+procedure TOpenAIChatComp.ParseChoices(RecvObj: TJSONObject);
 var
   jArr: TJSONArray;
   ai, aMax: Integer;
-  ResStr: string;
+  SubDoc: TJSONObject;
 begin
   FID   := GetJsonStr(RecvObj, 'id'   );
   FModel:= GetJsonStr(RecvObj, 'model');
@@ -322,48 +360,52 @@ begin
   SetLength(FzChoices, aMax);
   for ai:= 0 to aMax - 1 do
   begin
-    ResStr:= GetJsonStr(TJSONObject(jArr.Get(ai)), 'text');
-    FzChoices[ai]:= ResStr;
+    SubDoc:= GetJsonObj(TJSONObject(jArr.Get(ai)), 'message');
+    if SubDoc <> nil then
+    begin
+      FzChoices[ai].Role   := GetJsonStr(SubDoc, 'role');
+      FzChoices[ai].Content:= GetJsonStr(SubDoc, 'content');
+    end;
   end;
 end;
 
-procedure TOpenAIComp.SetCompCnt(const Value: Integer);
+procedure TOpenAIChatComp.SetCompCnt(const Value: Integer);
 begin
   FCompCnt.Free;
   FCompCnt:= TJSONNumber.Create(Value);
 end;
 
-procedure TOpenAIComp.SetFrequency_penalty(const Value: Double);
+procedure TOpenAIChatComp.SetFrequency_penalty(const Value: Double);
 begin
   FFrequency_penalty.Free;
   FFrequency_penalty:= TJSONNumber.Create(Value);
 end;
 
-procedure TOpenAIComp.SetMax_Tokens(const Value: Integer);
+procedure TOpenAIChatComp.SetMax_Tokens(const Value: Integer);
 begin
   FMax_Tokens.Free;
   FMax_Tokens:= TJSONNumber.Create(Value);
 end;
 
-procedure TOpenAIComp.SetPresence_penalty(const Value: Double);
+procedure TOpenAIChatComp.SetPresence_penalty(const Value: Double);
 begin
   FPresence_penalty.Free;
   FPresence_penalty:= TJSONNumber.Create(Value);
 end;
 
-procedure TOpenAIComp.SetStopStr(const Value: string);
+procedure TOpenAIChatComp.SetStopStr(const Value: string);
 begin
   FStopStr.Free;
   FStopStr:= TJSONString.Create(Value);
 end;
 
-procedure TOpenAIComp.SetTemperature(const Value: Double);
+procedure TOpenAIChatComp.SetTemperature(const Value: Double);
 begin
   FTemperature.Free;
   FTemperature:= TJSONNumber.Create(Value);
 end;
 
-procedure TOpenAIComp.SetTop_p(const Value: Double);
+procedure TOpenAIChatComp.SetTop_p(const Value: Double);
 begin
   FTop_p.Free;
   FTop_p:= TJSONNumber.Create(Value);

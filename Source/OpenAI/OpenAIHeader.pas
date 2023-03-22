@@ -8,6 +8,8 @@ const
   IMG_EDIT_URL       = 'v1/images/edits';
   IMG_VARIATION_URL  = 'v1/images/variations';
   COMPLETION_URL     = 'v1/completions';
+  CHAT_COMPLE_URL    = 'v1/chat/completions';
+  MODEL_LIST_URL     = 'v1/models';
 
   MAX_IMG_DESC       = 1000;
   MAX_IMG_SIZE       = 4194304;   //4MB = 4 * 1024 * 1024
@@ -18,13 +20,20 @@ const
   LASTEST_MODEL_Ada     = 'text-ada-001';           //Parsing text, simple classification, address correction, keywords
   LASTEST_MODEL_GPT3    = LASTEST_MODEL_Davinci;
 
+  MAIN_MODEL_GPT3_5     = 'gpt-3.5-turbo';
+  LASTEST_MODEL_GPT3_5  = MAIN_MODEL_GPT3_5;
+
+  MAIN_MODEL_GPT4       = 'gpt-4';
+  LONGER_MODEL_GPT4     = 'gpt-4-32k';
+  LASTEST_MODEL_GPT4    = MAIN_MODEL_GPT4;
+
   LASTEST_MODEL_Codex   = 'code-davinci-002';       //public code from GitHub
   LASTEST_MODEL_Filter  = 'content-filter-alpha';
 
 type
   TAiImgSize   = (ais256, ais512, ais1024);
   TAiImgResFmt = (airfUrl, airfB64Json);
-  TAiModel     = (aimDav, aimCur, aimBab, aimAda);
+  TAiModel     = (aimVer40, aimVer35, aimDav, aimCur, aimBab, aimAda);
 
 
 function AisToStr(AiImgSize: TAiImgSize): string;
@@ -78,10 +87,12 @@ end;
 function AimToStr(AiModel: TAiModel): string;
 begin
   case AiModel of
-    aimDav: Result:= LASTEST_MODEL_Davinci;
-    aimCur: Result:= LASTEST_MODEL_Curie;
-    aimBab: Result:= LASTEST_MODEL_Babbage;
-    aimAda: Result:= LASTEST_MODEL_Ada;
+    aimVer40: Result:= LASTEST_MODEL_GPT4;
+    aimVer35: Result:= LASTEST_MODEL_GPT3_5;
+    aimDav  : Result:= LASTEST_MODEL_Davinci;
+    aimCur  : Result:= LASTEST_MODEL_Curie;
+    aimBab  : Result:= LASTEST_MODEL_Babbage;
+    aimAda  : Result:= LASTEST_MODEL_Ada;
   end;
 end;
 

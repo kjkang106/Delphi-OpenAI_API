@@ -16,7 +16,9 @@ uses
   OpenAIComp in 'OpenAI\OpenAIComp.pas',
   InitInfo in 'OpenAI\InitInfo.pas',
   PNGImgUtil in 'Utils\PNGImgUtil.pas',
-  ImgView in 'ImgView.pas' {FImgView};
+  ImgView in 'ImgView.pas' {FImgView},
+  OpenAIModel in 'OpenAI\OpenAIModel.pas',
+  OpenAIChatComp in 'OpenAI\OpenAIChatComp.pas';
 
 {$R *.res}
 

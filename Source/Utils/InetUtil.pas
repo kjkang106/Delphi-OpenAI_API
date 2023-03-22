@@ -6,7 +6,10 @@ uses
   Windows, Classes, SysUtils, WinInet, StrUtils, StrUtil, WinHTTPUtil;
 
 function HttpGet (const AUrl: string): string; overload;
+function HttpGet (const AUrl: string; CustomHeader: TStringArray): string; overload;
 function HttpGet (const AUrl: string; AResponse: TStream): Boolean; overload;
+function HttpGet (const AUrl: string; CustomHeader: TStringArray; AResponse: TStream): Boolean; overload;
+
 function HttpPost(const AUrl, AParams: string): string; overload;
 function HttpPost(const AUrl, AParams: string; CustomHeader: TStringArray): string; overload;
 
@@ -115,48 +118,95 @@ end;
 
 function HttpGet(const AUrl: string): string;
 var
+  CustomHeader: TStringArray;
+begin
+  SetLength(CustomHeader, 0);
+  Result:= HttpGet(AUrl, CustomHeader);
+end;
+
+function HttpGet(const AUrl: string; CustomHeader: TStringArray): string;
+var
   AResponse: TMemoryStream;
 begin
   AResponse:= TMemoryStream.Create;
   try
-    if HttpGet(AUrl, AResponse) then
+    if HttpGet(AUrl, CustomHeader, AResponse) then
       Result:= GetCodePageStr(AResponse, 65001);
   finally
     AResponse.Free;
   end;
 end;
 
-function HttpGet (const AUrl: string; AResponse: TStream): Boolean;
+function HttpGet(const AUrl: string; AResponse: TStream): Boolean;
 var
+  CustomHeader: TStringArray;
+begin
+  SetLength(CustomHeader, 0);
+  Result:= HttpGet(AUrl, CustomHeader, AResponse);
+end;
+
+function HttpGet(const AUrl: string; CustomHeader: TStringArray; AResponse: TStream): Boolean;
+var
+  ParsedURL: TStringArray;
+  APort    : Word;
+  hi, hMax : Integer;
+
   hSession, hConnect, hRequest: HINTERNET;
+  Flags    : DWORD;
+  Header   : TStringStream;
   BufStream: TMemoryStream;
   Buffer   : array[0 .. 4096] of Char;
   dwBytesRead: DWORD;
 begin
-  Result := False;
+  Result   := False;
+  ParsedUrl:= ParseUrl(AUrl, APort);
+
   hSession := InternetOpen('Delphi', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
   if Assigned(hSession) then
   begin
-    hConnect := InternetOpenUrl(hSession, PChar(AUrl), nil, 0, INTERNET_FLAG_RELOAD, 0);
+//    hConnect := InternetOpenUrl(hSession, PChar(AUrl), nil, 0, INTERNET_FLAG_RELOAD, 0);
+    hConnect := InternetConnect(hSession, PChar(ParsedUrl[0]), APort, nil, nil, INTERNET_SERVICE_HTTP, 0, 0);
     if Assigned(hConnect) then
     begin
-      hRequest := InternetOpenUrl(hSession, PChar(AUrl), nil, 0, INTERNET_FLAG_RELOAD, 0);
+//      hRequest := InternetOpenUrl(hSession, PChar(AUrl), nil, 0, INTERNET_FLAG_RELOAD, 0);
+      if IsSecure(AUrl) then
+        Flags:= INTERNET_FLAG_SECURE or INTERNET_FLAG_KEEP_CONNECTION
+      else
+        Flags:= INTERNET_SERVICE_HTTP;
+      hRequest := HttpOpenRequest(hConnect, 'GET', PChar(ParsedUrl[1]), nil, nil, nil, Flags, 0);
       if Assigned(hRequest) then
       begin
-        BufStream:= TMemoryStream.Create;
-        try
-          repeat
-            InternetReadFile(hRequest, @Buffer, SizeOf(Buffer) - 1, dwBytesRead);
-            BufStream.Write(Buffer, dwBytesRead);
-          until dwBytesRead = 0;
-          //Buffer[0]:= #0;
-          //BufStream.Write(Buffer, 1);
-
-          Result:= True;
-          BufStream.SaveToStream(AResponse);
-        finally
-          BufStream.Free;
+        hMax:= Length(CustomHeader);
+        if hMax > 0 then
+        begin
+          Header := TStringStream.Create('');
+          try
+            for hi:= 0 to hMax - 1 do
+              Header.WriteString(CustomHeader[hi] + sLineBreak);
+            HttpAddRequestHeaders(hRequest, PChar(Header.DataString), Length(Header.DataString), HTTP_ADDREQ_FLAG_ADD);
+          finally
+            Header.Free;
+          end;
         end;
+
+        if HttpSendRequest(hRequest, nil, 0, nil, 0) then
+        begin
+          BufStream:= TMemoryStream.Create;
+          try
+            repeat
+              InternetReadFile(hRequest, @Buffer, SizeOf(Buffer) - 1, dwBytesRead);
+              BufStream.Write(Buffer, dwBytesRead);
+            until dwBytesRead = 0;
+            //Buffer[0]:= #0;
+            //BufStream.Write(Buffer, 1);
+
+            Result:= True;
+            BufStream.SaveToStream(AResponse);
+          finally
+            BufStream.Free;
+          end;
+        end;
+
         InternetCloseHandle(hRequest);
       end;
       InternetCloseHandle(hConnect);

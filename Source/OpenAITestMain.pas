@@ -35,6 +35,10 @@ type
     EtTemperature: TEdit;
     EtTopP: TEdit;
     EtMaskSize: TSpinEdit;
+    BtListModels: TButton;
+    BtChatCompletion: TButton;
+    Label7: TLabel;
+    EtRole: TEdit;
     procedure BtCreateImageClick(Sender: TObject);
     procedure CbImgListChange(Sender: TObject);
     procedure BtLoadImageClick(Sender: TObject);
@@ -53,6 +57,9 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure ImgOneDblClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure BtListModelsClick(Sender: TObject);
+    procedure BtChatCompletionClick(Sender: TObject);
+    procedure CbModelsChange(Sender: TObject);
   private
     { Private declarations }
     lMaskImgDown: Boolean;
@@ -71,7 +78,7 @@ var
 implementation
 
 uses InetUtil, OpenAI, OpenAIImg, OpenAIHeader, WICImgUtil, ProgressDlg,
-  OpenAIComp, InitInfo, PNGImgUtil, ImgView;
+  OpenAIComp, InitInfo, PNGImgUtil, ImgView, OpenAIModel, OpenAIChatComp;
 
 {$R *.dfm}
 
@@ -167,6 +174,51 @@ begin
   end;
 end;
 
+procedure TFOpenAITest.BtListModelsClick(Sender: TObject);
+var
+  OpenAIModel: TOpenAIModel;
+  Response: string;
+  ai, aMax: Integer;
+  bi, bMax: Integer;
+  mi: TAiModel;
+begin
+  WriteLog('ListModel');
+
+  OpenAIModel:= TOpenAIModel.Create;
+  try
+    OpenAIModel.api_key          := ApiKey;
+    OpenAIModel.organization     := Organization;
+    OpenAIModel.user_IDs         := EndUserIDs;
+
+    Response:= OpenAIModel.ListModels;
+
+    aMax:= Length(OpenAIModel.zModelData);
+    for ai:= 0  to aMax - 1 do
+    begin
+      for mi:= Low(TAiModel) to High(TAiModel) do
+      begin
+        if AimToStr(mi) = OpenAIModel.zModelData[ai].DataID then
+        begin
+          WriteLog(IntToStr(ai + 1) + '. ' + OpenAIModel.zModelData[ai].DataID);
+          bMax:= Length(OpenAIModel.zModelData[ai].DataPerm);
+          for bi:= 0 to bMax - 1 do
+          begin
+            WriteLog(' > PermID     = ' + OpenAIModel.zModelData[ai].DataPerm[bi].PermID);
+            WriteLog(' > AllowView  = ' + IfThen(OpenAIModel.zModelData[ai].DataPerm[bi].AllowView, 'True', 'False'));
+            WriteLog(' > IsBlocking = ' + IfThen(OpenAIModel.zModelData[ai].DataPerm[bi].IsBlocking, 'True', 'False'));
+          end;
+          Break;
+        end;
+      end;
+    end;
+  finally
+    OpenAIModel.Free;
+    OpenAIModel:= nil;
+  end;
+
+  WriteLog(Response);
+end;
+
 procedure TFOpenAITest.BtLoadImageClick(Sender: TObject);
 var
   ImgFileName: string;
@@ -199,6 +251,40 @@ begin
 
   LbMaskFile.Caption:= MskFileName;
   LoadPngImage(MskFileName, ImgOne);
+end;
+
+procedure TFOpenAITest.BtChatCompletionClick(Sender: TObject);
+var
+  OpenAIChatComp: TOpenAIChatComp;
+  Response: string;
+  ai, aMax: Integer;
+begin
+  WriteLog('ChatCompletion');
+
+  OpenAIChatComp:= TOpenAIChatComp.Create;
+  try
+    OpenAIChatComp.api_key          := ApiKey;
+    OpenAIChatComp.organization     := Organization;
+    OpenAIChatComp.user_IDs         := EndUserIDs;
+    OpenAIChatComp.AddChatMessage(EtRole.Text, MemoPrompt.Text);
+    OpenAIChatComp.Max_tokens       := EtMaxToken.Value;
+    OpenAIChatComp.Temperature      := StrToFloatDef(EtTemperature.Text, 0);
+    OpenAIChatComp.Top_p            := StrToFloatDef(EtTopP.Text, 0);
+    OpenAIChatComp.Frequency_penalty:= 0.0;
+    OpenAIChatComp.Presence_penalty := 0.0;
+    //OpenAIChatComp.StopStr          := sLineBreak;
+
+    Response:= OpenAIChatComp.CreateChatCompletions( AimToStr(IntToAim(CbModels.ItemIndex)) );
+
+    aMax:= Length(OpenAIChatComp.zChoices);
+    for ai:= 0  to aMax - 1 do
+      WriteLog(Format('[%s]%s', [OpenAIChatComp.zChoices[ai].Role, OpenAIChatComp.zChoices[ai].Content]));
+  finally
+    OpenAIChatComp.Free;
+    OpenAIChatComp:= nil;
+  end;
+
+  WriteLog(Response);
 end;
 
 procedure TFOpenAITest.BtClearImgMaskClick(Sender: TObject);
@@ -340,6 +426,32 @@ begin
   LbMaskFile.Caption := '';
 end;
 
+procedure TFOpenAITest.CbModelsChange(Sender: TObject);
+var
+  nIdx: Integer;
+  aim: TAiModel;
+begin
+  nIdx:= TComboBox(Sender).ItemIndex;
+  if nIdx < 0 then
+    Exit;
+  if nIdx > Ord(High(TAiModel)) then
+    Exit;
+  aim:= TAiModel(nIdx);
+  case aim of
+    aimVer40,
+    aimVer35:
+      begin
+        BtCompletion.Enabled    := False;
+        BtChatCompletion.Enabled:= True;
+      end;
+    else
+      begin
+        BtCompletion.Enabled    := True;
+        BtChatCompletion.Enabled:= False;
+      end;
+  end;
+end;
+
 procedure TFOpenAITest.FormActivate(Sender: TObject);
 begin
   OnActivate:= nil;
@@ -450,6 +562,10 @@ begin
   EtTemperature.Text   := LoadLastInfo('Temperature'  , EtTemperature.Text);
   EtTopP.Text          := LoadLastInfo('EtTopP'       , EtTopP.Text);
   MemoPrompt.Text      := LoadLastInfo('Prompt'       , MemoPrompt.Text);
+
+  EtRole.Text          := LoadLastInfo('Role'         , EtRole.Text);
+
+  CbModelsChange(CbModels);
 end;
 
 procedure TFOpenAITest.SaveAsMaskImage;
@@ -478,6 +594,8 @@ begin
   SaveLastInfo('Temperature'  , EtTemperature.Text);
   SaveLastInfo('EtTopP'       , EtTopP.Text);
   SaveLastInfo('Prompt'       , MemoPrompt.Text);
+
+  SaveLastInfo('Role'         , EtRole.Text);
 end;
 
 procedure TFOpenAITest.WriteLog(msg: string);

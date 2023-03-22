@@ -42,6 +42,15 @@ type
     property zFormData   : TStringArray  read FzFormData     write FzFormData;
   end;
 
+  TSendHttpGetThread = class(TOpenAIThread)
+  private
+    FCustomHeader: TStringArray;
+  public
+    procedure Execute; override;
+
+    property CustomHeader: TStringArray  read FCustomHeader  write FCustomHeader;
+  end;
+
   TOpenAI = class
   private
     Fapi_key      : string;
@@ -63,6 +72,7 @@ type
 
     function SendJson(AUrl: string; SendObj: TJSONObject): string;
     function SendFormData(AUrl: string; zFormData: TStringArray): string;
+    function SendHttpGet(AUrl: string): string;
   published
     property api_key     : string          read Fapi_key      write Fapi_key;
     property organization: string          read Forganization write Forganization;
@@ -100,6 +110,39 @@ begin
   if Assigned(FOnProgHide) then
     FOnProgHide(Self);
   HideProgDlg;
+end;
+
+function TOpenAI.SendHttpGet(AUrl: string): string;
+var
+  CustomHeader: TStringArray;
+  SendHttpGetThread: TSendHttpGetThread;
+begin
+  SetLength(CustomHeader, 1);
+  CustomHeader[0]:= 'Authorization: Bearer ' + api_key;
+  if organization <> '' then
+  begin
+    SetLength(CustomHeader, 2);
+    CustomHeader[1]:= 'OpenAI-Organization: ' + organization;
+  end;
+
+  FOutStr:= '';
+  ShowProcessDlg('Http Get ...');
+  try
+    SendHttpGetThread:= TSendHttpGetThread.Create(True);
+    SendHttpGetThread.AUrl           := AUrl;
+    SendHttpGetThread.CustomHeader   := CustomHeader;
+    SendHttpGetThread.OnResult       := OnResult;
+    SendHttpGetThread.FreeOnTerminate:= False;
+    SendHttpGetThread.Start;
+
+    while not SendHttpGetThread.Terminated do
+      Application.ProcessMessages;
+  finally
+    SendHttpGetThread.Free;
+    HideProcessDlg;
+  end;
+
+  Result:= FOutStr;
 end;
 
 procedure TOpenAI.OnResult(Sender: TObject);
@@ -237,6 +280,18 @@ begin
   inherited;
 
   OutStr:= HttpPostFormData(AUrl, CustomHeader, zFormData);
+  Synchronize(NotiResult);
+
+  Terminate;
+end;
+
+{ TSendHttpGetThread }
+
+procedure TSendHttpGetThread.Execute;
+begin
+  inherited;
+
+  OutStr:= HttpGet(AUrl, CustomHeader);
   Synchronize(NotiResult);
 
   Terminate;

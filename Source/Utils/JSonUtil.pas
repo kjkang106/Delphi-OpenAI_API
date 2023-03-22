@@ -12,6 +12,7 @@ procedure AddJsonParam(var doc:TJSONObject; name: string; value: TJSONArray); ov
 
 function  GetJsonStr(jDoc: TJSONObject; const name: string; const nLen: Integer = 0): string;
 function  GetJsonInt(jDoc: TJSONObject; const name: string): Integer;
+function  GetJsonBle(jDoc: TJSONObject; const name: string): Boolean;
 function  GetJsonArr(jDoc: TJSONObject; const name: string): TJSONArray;
 function  GetJsonObj(jDoc: TJSONObject; const name: string): TJSONObject;
 
@@ -67,6 +68,14 @@ begin
     Result:= 0
   else
     Result:= TJSONNumber(jDoc.Get(name).JsonValue).AsInt;
+end;
+
+function  GetJsonBle(jDoc: TJSONObject; const name: string): Boolean;
+begin
+  if (jDoc = nil) or (jDoc.Get(name) = nil) then
+    Result:= False
+  else
+    Result:= (jDoc.Get(name).JsonValue).ToString = 'true';
 end;
 
 function GetJsonStr(jDoc: TJSONObject; const name: string; const nLen: Integer): string;

@@ -86,12 +86,19 @@ object FOpenAITest: TFOpenAITest
     Height = 13
     Caption = 'Top_p'
   end
+  object Label7: TLabel
+    Left = 526
+    Top = 88
+    Width = 21
+    Height = 13
+    Caption = 'Role'
+  end
   object MemoLog: TMemo
     Left = 526
     Top = 255
     Width = 512
     Height = 344
-    TabOrder = 11
+    TabOrder = 12
   end
   object BtCreateImage: TButton
     Left = 194
@@ -159,12 +166,12 @@ object FOpenAITest: TFOpenAITest
   end
   object MemoPrompt: TMemo
     Left = 526
-    Top = 87
+    Top = 112
     Width = 512
-    Height = 162
+    Height = 137
     Lines.Strings = (
       'A cute baby sea otter')
-    TabOrder = 10
+    TabOrder = 11
   end
   object BtImageEdit: TButton
     Left = 845
@@ -172,7 +179,7 @@ object FOpenAITest: TFOpenAITest
     Width = 96
     Height = 25
     Caption = 'ImageEdit'
-    TabOrder = 7
+    TabOrder = 8
     OnClick = BtImageEditClick
   end
   object BtImageVariation: TButton
@@ -181,7 +188,7 @@ object FOpenAITest: TFOpenAITest
     Width = 96
     Height = 25
     Caption = 'ImageVariation'
-    TabOrder = 8
+    TabOrder = 9
     OnClick = BtImageVariationClick
   end
   object BtMakeMask: TButton
@@ -195,21 +202,21 @@ object FOpenAITest: TFOpenAITest
   end
   object BtCompletion: TButton
     Left = 942
-    Top = 55
+    Top = 56
     Width = 96
     Height = 25
     Caption = 'Completion'
-    TabOrder = 16
+    TabOrder = 19
     OnClick = BtCompletionClick
   end
   object EtMaxToken: TSpinEdit
     Left = 677
-    Top = 57
+    Top = 58
     Width = 59
     Height = 22
     MaxValue = 2048
     MinValue = 1
-    TabOrder = 9
+    TabOrder = 10
     Value = 60
   end
   object BtClearImgMask: TButton
@@ -218,19 +225,20 @@ object FOpenAITest: TFOpenAITest
     Width = 26
     Height = 19
     Caption = 'X'
-    TabOrder = 12
+    TabOrder = 13
     OnClick = BtClearImgMaskClick
   end
   object CbModels: TComboBox
     Left = 526
-    Top = 57
+    Top = 58
     Width = 145
     Height = 21
     Style = csDropDownList
-    ItemIndex = 0
-    TabOrder = 13
-    Text = 'Davinci'
+    TabOrder = 14
+    OnChange = CbModelsChange
     Items.Strings = (
+      'GPT-4'
+      'GPT-3.5-Turbo'
       'Davinci'
       'Curie'
       'Babbage'
@@ -238,22 +246,22 @@ object FOpenAITest: TFOpenAITest
   end
   object EtTemperature: TEdit
     Left = 767
-    Top = 58
-    Width = 59
-    Height = 21
-    MaxLength = 3
-    NumbersOnly = True
-    TabOrder = 14
-    Text = '0'
-  end
-  object EtTopP: TEdit
-    Left = 858
-    Top = 58
+    Top = 59
     Width = 59
     Height = 21
     MaxLength = 3
     NumbersOnly = True
     TabOrder = 15
+    Text = '0'
+  end
+  object EtTopP: TEdit
+    Left = 858
+    Top = 59
+    Width = 59
+    Height = 21
+    MaxLength = 3
+    NumbersOnly = True
+    TabOrder = 16
     Text = '1.0'
   end
   object EtMaskSize: TSpinEdit
@@ -263,7 +271,34 @@ object FOpenAITest: TFOpenAITest
     Height = 22
     MaxValue = 50
     MinValue = 1
-    TabOrder = 17
+    TabOrder = 7
     Value = 5
+  end
+  object BtListModels: TButton
+    Left = 942
+    Top = 32
+    Width = 96
+    Height = 25
+    Caption = 'ListModels'
+    TabOrder = 18
+    OnClick = BtListModelsClick
+  end
+  object BtChatCompletion: TButton
+    Left = 942
+    Top = 80
+    Width = 96
+    Height = 25
+    Caption = 'ChatCompletion'
+    TabOrder = 20
+    OnClick = BtChatCompletionClick
+  end
+  object EtRole: TEdit
+    Left = 553
+    Top = 85
+    Width = 118
+    Height = 21
+    MaxLength = 20
+    TabOrder = 17
+    Text = 'user'
   end
 end
