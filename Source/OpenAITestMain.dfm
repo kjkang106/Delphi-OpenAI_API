@@ -166,9 +166,9 @@ object FOpenAITest: TFOpenAITest
   end
   object MemoPrompt: TMemo
     Left = 526
-    Top = 112
+    Top = 136
     Width = 512
-    Height = 137
+    Height = 113
     Lines.Strings = (
       'A cute baby sea otter')
     TabOrder = 11
@@ -250,7 +250,6 @@ object FOpenAITest: TFOpenAITest
     Width = 59
     Height = 21
     MaxLength = 3
-    NumbersOnly = True
     TabOrder = 15
     Text = '0'
   end
@@ -260,7 +259,6 @@ object FOpenAITest: TFOpenAITest
     Width = 59
     Height = 21
     MaxLength = 3
-    NumbersOnly = True
     TabOrder = 16
     Text = '1.0'
   end
@@ -300,5 +298,23 @@ object FOpenAITest: TFOpenAITest
     MaxLength = 20
     TabOrder = 17
     Text = 'user'
+  end
+  object BtTranscription: TButton
+    Left = 845
+    Top = 105
+    Width = 96
+    Height = 25
+    Caption = 'Transcription'
+    TabOrder = 21
+    OnClick = BtTranscriptionClick
+  end
+  object BtTranslation: TButton
+    Left = 942
+    Top = 105
+    Width = 96
+    Height = 25
+    Caption = 'Translation'
+    TabOrder = 22
+    OnClick = BtTranslationClick
   end
 end

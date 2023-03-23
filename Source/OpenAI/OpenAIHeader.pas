@@ -10,9 +10,12 @@ const
   COMPLETION_URL     = 'v1/completions';
   CHAT_COMPLE_URL    = 'v1/chat/completions';
   MODEL_LIST_URL     = 'v1/models';
+  STT_TRANSCRIPT_URL = 'v1/audio/transcriptions';
+  STT_TRANSLATE_URL  = 'v1/audio/translations';
 
   MAX_IMG_DESC       = 1000;
   MAX_IMG_SIZE       = 4194304;   //4MB = 4 * 1024 * 1024
+  MAX_AUDIO_SIZE     = 26214400;  //25MB
 
   LASTEST_MODEL_Davinci = 'text-davinci-003';       //Complex intent, cause and effect, summarization for audience
   LASTEST_MODEL_Curie   = 'text-curie-001';         //Language translation, complex classification, text sentiment, summarization
@@ -30,11 +33,14 @@ const
   LASTEST_MODEL_Codex   = 'code-davinci-002';       //public code from GitHub
   LASTEST_MODEL_Filter  = 'content-filter-alpha';
 
+  LASTEST_MODEL_STT     = 'whisper-1';
+
 type
   TAiImgSize   = (ais256, ais512, ais1024);
   TAiImgResFmt = (airfUrl, airfB64Json);
   TAiModel     = (aimVer40, aimVer35, aimDav, aimCur, aimBab, aimAda);
-
+  TAiSttFile   = (asfMp3, asfMp4, asfMpeg, asfMpga, asfM4a, asfWav, asfWebm);
+  TAiSttResFmt = (asrfJson, asrfText, asrfSrt, asrfVJson, asrfVtt);
 
 function AisToStr(AiImgSize: TAiImgSize): string;
 function IntToAis(Idx: Integer): TAiImgSize;
@@ -44,6 +50,9 @@ function IntToAirf(Idx: Integer): TAiImgResFmt;
 
 function AimToStr(AiModel: TAiModel): string;
 function IntToAim(Idx: Integer): TAiModel;
+
+function AsfToFileExt(AiSttFile: TAiSttFile): string;
+function AsrfToStr(AiSttResFmt: TAiSttResFmt): string;
 
 implementation
 
@@ -98,10 +107,38 @@ end;
 
 function IntToAim(Idx: Integer): TAiModel;
 begin
-  if (Idx < 0) or (Idx > Ord(aimAda)) then
+  if (Idx < 0) or (Idx > Ord(High(TAiModel))) then
     Exit(aimDav);
 
   Result:= TAiModel(Idx);
+end;
+
+function AsfToFileExt(AiSttFile: TAiSttFile): string;
+begin
+  case AiSttFile of
+    asfMp3:  Result:= '.mp3';
+    asfMp4:  Result:= '.mp4';
+    asfMpeg: Result:= '.mpeg';
+    asfMpga: Result:= '.mpga';
+    asfM4a:  Result:= '.m4a';
+    asfWav:  Result:= '.wav';
+    asfWebm: Result:= '.webm';
+    else
+      Result:= '';
+  end;
+end;
+
+function AsrfToStr(AiSttResFmt: TAiSttResFmt): string;
+begin
+  case AiSttResFmt of
+    asrfJson:  Result:= 'json';
+    asrfText:  Result:= 'text';
+    asrfSrt:   Result:= 'srt';
+    asrfVJson: Result:= 'verbose_json';
+    asrfVtt:   Result:= 'vtt';
+    else
+      Result:= '';
+  end;
 end;
 
 end.

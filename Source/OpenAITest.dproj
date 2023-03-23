@@ -72,6 +72,7 @@
 			</DCCReference>
 			<DCCReference Include="OpenAI\OpenAIModel.pas"/>
 			<DCCReference Include="OpenAI\OpenAIChatComp.pas"/>
+			<DCCReference Include="OpenAI\OpenAIStt.pas"/>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

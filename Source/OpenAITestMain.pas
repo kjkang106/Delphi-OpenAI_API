@@ -39,6 +39,8 @@ type
     BtChatCompletion: TButton;
     Label7: TLabel;
     EtRole: TEdit;
+    BtTranscription: TButton;
+    BtTranslation: TButton;
     procedure BtCreateImageClick(Sender: TObject);
     procedure CbImgListChange(Sender: TObject);
     procedure BtLoadImageClick(Sender: TObject);
@@ -60,6 +62,8 @@ type
     procedure BtListModelsClick(Sender: TObject);
     procedure BtChatCompletionClick(Sender: TObject);
     procedure CbModelsChange(Sender: TObject);
+    procedure BtTranscriptionClick(Sender: TObject);
+    procedure BtTranslationClick(Sender: TObject);
   private
     { Private declarations }
     lMaskImgDown: Boolean;
@@ -78,7 +82,8 @@ var
 implementation
 
 uses InetUtil, OpenAI, OpenAIImg, OpenAIHeader, WICImgUtil, ProgressDlg,
-  OpenAIComp, InitInfo, PNGImgUtil, ImgView, OpenAIModel, OpenAIChatComp;
+  OpenAIComp, InitInfo, PNGImgUtil, ImgView, OpenAIModel, OpenAIChatComp,
+  OpenAIStt;
 
 {$R *.dfm}
 
@@ -251,6 +256,76 @@ begin
 
   LbMaskFile.Caption:= MskFileName;
   LoadPngImage(MskFileName, ImgOne);
+end;
+
+procedure TFOpenAITest.BtTranscriptionClick(Sender: TObject);
+var
+  OpenAIStt: TOpenAIStt;
+  AudioFileName: string;
+  Response: string;
+  ai, aMax: Integer;
+begin
+  WriteLog('CreateTranscription');
+
+  if not PromptForFileName(AudioFileName,
+    'Audios|*.mp3;*.mp4;*.mpeg;*.mpga;*.m4a;*.wav;*.webm|All Files|*.*',
+    '', 'Select Audio', AudioPath) then
+  begin
+    Exit;
+  end;
+
+  OpenAIStt:= TOpenAIStt.Create;
+  try
+    OpenAIStt.api_key     := ApiKey;
+    OpenAIStt.organization:= Organization;
+    OpenAIStt.user_IDs    := EndUserIDs;
+    OpenAIStt.Prompt      := MemoPrompt.Text;
+    OpenAIStt.ResFmt      := asrfJson;
+    Response:= OpenAIStt.CreateTranscription(AudioFileName, LASTEST_MODEL_STT);
+
+    if Response = 'OK' then
+      WriteLog(OpenAIStt.RltText);
+  finally
+    OpenAIStt.Free;
+    OpenAIStt:= nil;
+  end;
+
+  WriteLog(Response);
+end;
+
+procedure TFOpenAITest.BtTranslationClick(Sender: TObject);
+var
+  OpenAIStt: TOpenAIStt;
+  AudioFileName: string;
+  Response: string;
+  ai, aMax: Integer;
+begin
+  WriteLog('CreateTranslation');
+
+  if not PromptForFileName(AudioFileName,
+    'Audios|*.mp3;*.mp4;*.mpeg;*.mpga;*.m4a;*.wav;*.webm|All Files|*.*',
+    '', 'Select Audio', AudioPath) then
+  begin
+    Exit;
+  end;
+
+  OpenAIStt:= TOpenAIStt.Create;
+  try
+    OpenAIStt.api_key     := ApiKey;
+    OpenAIStt.organization:= Organization;
+    OpenAIStt.user_IDs    := EndUserIDs;
+    OpenAIStt.Prompt      := MemoPrompt.Text;
+    OpenAIStt.ResFmt      := asrfJson;
+    Response:= OpenAIStt.CreateTranslation(AudioFileName, LASTEST_MODEL_STT);
+
+    if Response = 'OK' then
+      WriteLog(OpenAIStt.RltText);
+  finally
+    OpenAIStt.Free;
+    OpenAIStt:= nil;
+  end;
+
+  WriteLog(Response);
 end;
 
 procedure TFOpenAITest.BtChatCompletionClick(Sender: TObject);
@@ -475,9 +550,11 @@ end;
 
 procedure TFOpenAITest.FormCreate(Sender: TObject);
 begin
-  RootPath:= IncludeTrailingPathDelimiter( GetCurrentDir );
-  ImgPath := RootPath + 'Image\';
+  RootPath := IncludeTrailingPathDelimiter( GetCurrentDir );
+  ImgPath  := RootPath + 'Image\';
   ForceDirectories(ImgPath);
+  AudioPath:= RootPath + 'Audio\';
+  ForceDirectories(AudioPath);
 
   LbImageFile.Caption:= '';
   LbMaskFile.Caption := '';

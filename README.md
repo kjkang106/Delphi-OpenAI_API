@@ -8,3 +8,4 @@
 - https://platform.openai.com/docs/guides/completion
 - https://platform.openai.com/docs/guides/images
 - https://platform.openai.com/docs/guides/chat
+- https://platform.openai.com/docs/guides/speech-to-text

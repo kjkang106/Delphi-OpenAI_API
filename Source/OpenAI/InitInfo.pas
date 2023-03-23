@@ -3,10 +3,10 @@ unit InitInfo;
 interface
 
 uses
-  IniFiles;
+  SysUtils, IniFiles;
 
 var
-  RootPath, ImgPath: string;
+  RootPath, ImgPath, AudioPath: string;
 
   ApiKey      : string;
   Organization: string;
@@ -57,6 +57,9 @@ begin
   Ini:= TIniFile.Create(RootPath + 'Init.ini');
   try
     Result:= Ini.ReadString('LastInfo', Ident, Default);
+
+    Result:= StringReplace(Result, '\n', #$A, [rfReplaceAll]);
+    Result:= StringReplace(Result, '\r', #$D, [rfReplaceAll]);
   finally
     Ini.Free;
   end;
@@ -80,6 +83,9 @@ var
 begin
   Ini:= TIniFile.Create(RootPath + 'Init.ini');
   try
+    Value:= StringReplace(Value, #$A, '\n', [rfReplaceAll]);
+    Value:= StringReplace(Value, #$D, '\r', [rfReplaceAll]);
+
     Ini.WriteString('LastInfo', Ident, Value);
   finally
     Ini.Free;
