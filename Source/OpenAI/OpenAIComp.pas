@@ -3,7 +3,7 @@ unit OpenAIComp;
 interface
 
 uses
-  Classes, SysUtils, OpenAIHeader, OpenAI, DBXJSON, StrUtil;
+  Classes, SysUtils, OpenAIHeader, OpenAI, DBXJSON, StrUtil, HTTPApp;
 
 type
   TOpenAIComp = class(TOpenAI)
@@ -286,7 +286,7 @@ begin
 
   Result:= True;
   AddJsonParam(SendObj, 'model'             , AModel);
-  AddJsonParam(SendObj, 'prompt'            , SimpleEscapeJsonParamStr(Prompt));
+  AddJsonParam(SendObj, 'prompt'            , HTTPEncode(SimpleEscapeJsonParamStr(Prompt)));
   if not(FMax_Tokens is TJSONNull) then
     AddJsonParam(SendObj, 'max_tokens'        , Max_tokens);
   if not(FTemperature is TJSONNull) then
@@ -309,7 +309,6 @@ procedure TOpenAIComp.ParseChoices(RecvObj: TJSONObject);
 var
   jArr: TJSONArray;
   ai, aMax: Integer;
-  ResStr: string;
 begin
   FID   := GetJsonStr(RecvObj, 'id'   );
   FModel:= GetJsonStr(RecvObj, 'model');
@@ -322,8 +321,11 @@ begin
   SetLength(FzChoices, aMax);
   for ai:= 0 to aMax - 1 do
   begin
-    ResStr:= GetJsonStr(TJSONObject(jArr.Get(ai)), 'text');
-    FzChoices[ai]:= ResStr;
+    FzChoices[ai]:= GetJsonStr(TJSONObject(jArr.Get(ai)), 'text');
+    try
+      FzChoices[ai]:= HTTPDecode( FzChoices[ai] );
+    except
+    end;
   end;
 end;
 

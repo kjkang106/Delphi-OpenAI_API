@@ -3,7 +3,7 @@ unit OpenAIImg;
 interface
 
 uses
-  Classes, SysUtils, OpenAIHeader, OpenAI, DBXJSON, StrUtil;
+  Classes, SysUtils, OpenAIHeader, OpenAI, DBXJSON, StrUtil, HTTPApp;
 
 type
   TOpenAIImgPrc = (aipCreate, aipEdit, aipVari);
@@ -302,7 +302,7 @@ begin
   AddFormParam('image'          , '@' + ImgFileName);
   if ImgMask <> '' then
     AddFormParam('mask'           , '@' + ImgMask);
-  AddFormParam('prompt'         , APrompt);
+  AddFormParam('prompt'         , HTTPEncode(APrompt));
   AddFormParam('n'              , IntToStr(ImgCount));
   AddFormParam('size'           , AisToStr(ImgSize));
   AddFormParam('response_format', AirfToStr(ResFmt));
@@ -318,7 +318,7 @@ begin
     Exit;
 
   Result:= True;
-  AddJsonParam(SendObj, 'prompt'         , APrompt);
+  AddJsonParam(SendObj, 'prompt'         , HTTPEncode(APrompt));
   AddJsonParam(SendObj, 'n'              , ImgCount);
   AddJsonParam(SendObj, 'size'           , AisToStr(ImgSize));
   AddJsonParam(SendObj, 'response_format', AirfToStr(ResFmt));

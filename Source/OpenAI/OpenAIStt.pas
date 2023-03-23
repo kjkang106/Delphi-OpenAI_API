@@ -3,7 +3,7 @@ unit OpenAIStt;
 interface
 
 uses
-  Classes, SysUtils, OpenAIHeader, OpenAI, DBXJSON, StrUtil;
+  Classes, SysUtils, OpenAIHeader, OpenAI, DBXJSON, StrUtil, HTTPApp;
 
 type
   TOpenAIStt = class(TOpenAI)
@@ -271,7 +271,7 @@ begin
 
   AddFormParam('file'           , '@' + AFile);
   AddFormParam('model'          , AModel);
-  AddFormParam('prompt'         , SimpleEscapeJsonParamStr(Prompt));
+  AddFormParam('prompt'         , HTTPEncode(SimpleEscapeJsonParamStr(Prompt)));
   AddFormParam('response_format', AsrfToStr(ResFmt));
   if not(FTemperature is TJSONNull) then
     AddFormParam('temperature'    , FloatToStr(Temperature));
@@ -301,7 +301,7 @@ begin
 
   AddFormParam('file'           , '@' + AFile);
   AddFormParam('model'          , AModel);
-  AddFormParam('prompt'         , SimpleEscapeJsonParamStr(Prompt));
+  AddFormParam('prompt'         , HTTPEncode(SimpleEscapeJsonParamStr(Prompt)));
   AddFormParam('response_format', AsrfToStr(ResFmt));
   if not(FTemperature is TJSONNull) then
     AddFormParam('temperature'    , FloatToStr(Temperature));
@@ -312,11 +312,19 @@ end;
 procedure TOpenAIStt.ParseTranscription(RecvObj: TJSONObject);
 begin
   FRltText:= GetJsonStr(RecvObj, 'text');
+  try
+    FRltText:= HTTPDecode(FRltText);
+  except
+  end;
 end;
 
 procedure TOpenAIStt.ParseTranslation(RecvObj: TJSONObject);
 begin
   FRltText:= GetJsonStr(RecvObj, 'text');
+  try
+    FRltText:= HTTPDecode(FRltText);
+  except
+  end;
 end;
 
 procedure TOpenAIStt.SetLanguage(const Value: string);

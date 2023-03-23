@@ -3,7 +3,7 @@ unit OpenAIChatComp;
 interface
 
 uses
-  Classes, SysUtils, OpenAIHeader, OpenAI, DBXJSON, StrUtil;
+  Classes, SysUtils, OpenAIHeader, OpenAI, DBXJSON, StrUtil, HTTPApp;
 
 type
   TChatMsg = record
@@ -321,7 +321,7 @@ begin
   begin
     jSubDoc:= TJSONObject.Create;
     AddJsonParam(jSubDoc, 'role'   , SimpleEscapeJsonParamStr(FzChatMsg[mi].Role));
-    AddJsonParam(jSubDoc, 'content', SimpleEscapeJsonParamStr(FzChatMsg[mi].Content));
+    AddJsonParam(jSubDoc, 'content', HTTPEncode(SimpleEscapeJsonParamStr(FzChatMsg[mi].Content)));
     jArray.Add(jSubDoc);
   end;
   AddJsonParam(SendObj, 'messages', jArray);
@@ -365,6 +365,10 @@ begin
     begin
       FzChoices[ai].Role   := GetJsonStr(SubDoc, 'role');
       FzChoices[ai].Content:= GetJsonStr(SubDoc, 'content');
+      try
+        FzChoices[ai].Content:= HTTPDecode( FzChoices[ai].Content );
+      except
+      end;
     end;
   end;
 end;

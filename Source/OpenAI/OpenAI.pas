@@ -208,7 +208,7 @@ begin
   AParams:= SendObj.ToString;
 
   SetLength(CustomHeader, 2);
-  CustomHeader[0]:= 'Content-Type: application/json; charset=utf-8';
+  CustomHeader[0]:= 'Content-Type: application/json';//; charset=utf-8';
   CustomHeader[1]:= 'Authorization: Bearer ' + api_key;
   if organization <> '' then
   begin
